@@ -3,6 +3,6 @@
 
 int main(){
     pid_t pid = getpid();
-    printf("Hallo, meine pid ist: %d \n", pid);
+    printf("[PARENT] Hallo, meine pid ist: %d \n", pid);
     return 0;
 }
