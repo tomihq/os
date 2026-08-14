@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -pedantic -g
-TARGET = hello-fork
+TARGET = hello-orphan
 VPATH = $(shell find . -type d | tr '\n' ':')
 
 all: $(TARGET)
