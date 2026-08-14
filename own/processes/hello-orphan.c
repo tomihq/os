@@ -16,16 +16,17 @@ int main(){
         exit(EXIT_FAILURE);
     }
 
-    // Note that after the fork(), both processes start from the same IP. We don't have a guarantee about the execution order. Consider these problems as independent.
     if(child == 0){
-        printf("Hallo! Dies ist ein Kindprozess, und ich habe die PID: %d und meine Parent ist PID: %d \n", getpid(), getppid());
+        printf("Dies ist ein Kindprozess, und ich habe die PID: %d und meine Parent ist PID: %d \n", getpid(), getppid());
+        printf("Ich gehe jetzt schlafen; bis in 20 Sekunden. \n");
+        fflush(stdout);
         sleep(20);
     }else{
-        printf("Hallo! Das ist Parent.\n");
+        printf("Das ist Parent. Auf Wiedersehen! \n");
         exit(EXIT_SUCCESS);
     }
 
-    printf("Hallo! Meine Parent ist PID: %d \n", getppid());
-    return 0; 
+    printf("Das ist dein Child! Meine Parent ist PID: %d \n", getppid());
+    exit(EXIT_SUCCESS);
 
 }
