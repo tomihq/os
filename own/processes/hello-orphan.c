@@ -25,7 +25,8 @@ int main(){
         printf("Das ist Parent. Auf Wiedersehen! \n");
         exit(EXIT_SUCCESS);
     }
-
+    /* To see more information the parent, execute in bash:ps -p $PID -o pid,ppid,comm,args. Replace $PID with your child's PID. 
+    E.g.:  PID: 2959  PPID:1 COMMAND: systemd COMMAND: /usr/lib systemd/systemd --user*/
     printf("Das ist dein Child! Meine Parent ist PID: %d \n", getppid());
     exit(EXIT_SUCCESS);
 
