@@ -2,6 +2,7 @@
 #include <unistd.h>
 
 int main(){
-    printf("Hallo, meine pid ist: %d \n", getpid());
+    pid_t pid = getpid();
+    printf("Hallo, meine pid ist: %d \n", pid);
     return 0;
 }
