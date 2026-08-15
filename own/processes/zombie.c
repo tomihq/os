@@ -19,5 +19,6 @@ int main(){
         exit(EXIT_SUCCESS);
     }
 
+    //childs will be zombies as long as the parent doesn't end his execution.
     sleep(5000000);
 }
