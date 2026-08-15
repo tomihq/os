@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <sys/wait.h>
 
 int main(){
     pid_t pid = getpid();
@@ -17,10 +18,12 @@ int main(){
     if(child == 0){
         printf("[CHILD] ich habe die PID: %d und meine Parent ist PID: %d \n", getpid(), getppid());
         exit(EXIT_SUCCESS);
+    }else{
+        wait(NULL);
     }
 
-    //childs will be zombies as long as the parent doesn't end his execution.
+    //note that in this case the PARENT doesn't end but all children were set free.
     while(true){
-        printf("[PARENT] LOOP.");
+        printf("[PARENT] LOOP");
     }
 }
