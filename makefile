@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -pedantic -g
-TARGET = non-atomic-signal-mask
+TARGET = atomic-signal-mask
 VPATH = $(shell find . -type d | tr '\n' ':')
 
 all: $(TARGET)
