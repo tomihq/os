@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -pedantic -g
-TARGET = non-zombie
+TARGET = signals
 VPATH = $(shell find . -type d | tr '\n' ':')
 
 all: $(TARGET)
