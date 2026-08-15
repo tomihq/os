@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -pedantic -g
-TARGET = deadlock
+TARGET = dead-lock
 VPATH = $(shell find . -type d | tr '\n' ':')
 
 all: $(TARGET)
