@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -pedantic -g
-TARGET = hello-shared-mem
+TARGET = zombie
 VPATH = $(shell find . -type d | tr '\n' ':')
 
 all: $(TARGET)
