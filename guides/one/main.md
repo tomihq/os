@@ -90,6 +90,16 @@ En el esquema de transición de estados que se incluye a continuación:
 ![Process State Machine](process-state-machine.png)
 
 a) Dibujar las puntas de flechas que correspondan.
+    - New
+        -> Ready (crear el proceso)
+    - Ready
+        -> Running (ejecutar el proceso)
+    - Running
+        -> Ready (proceso perdió su quantum)
+        -> Blocked (debe esperar algo para seguir ejecutando)
+        -> Terminated (terminó su ejecución)
+    - Blocked
+        -> Ready (recibió lo que necesitaba para seguir ejecutando)
 b) Explicar qué causa cada transición y qué componentes *(scheduler, proceso, etc.)* estarían involucrados.
 
 Preguntar:
