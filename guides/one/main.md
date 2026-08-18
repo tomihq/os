@@ -79,6 +79,18 @@ Por lo tanto, los pasos del ejercicio 1 son:
 
 ## Ejercicio 3: Describir la diferencia entre un system call y una llamada a una función de biblioteca
 Una llamada a función de biblioteca es una llamada a código que forma parte de una biblioteca y normalmente comienza/ejecuta en user space. 
+
 Una system call es el mecanismo mediante el cual un proceso solicita un servicio al kernel, provocando una transición controlada de user mode a kernel mode. 
 
 Una función de biblioteca puede o no realizar internamente una system call.
+
+## Ejercicio 4.
+En el esquema de transición de estados que se incluye a continuación:
+
+![Process State Machine](process-state-machine.png)
+
+a) Dibujar las puntas de flechas que correspondan.
+b) Explicar qué causa cada transición y qué componentes *(scheduler, proceso, etc.)* estarían involucrados.
+
+Preguntar:
+1. ¿Qué pasa en el caso de que en la PCB el proceso está BLOCKED pero un padre te tira un SIGTERM? ¿No pasaría de BLOCKED a TERMINATED? Para mí faltan flechas o este es un modelo simplificado que "asume que termina" solo si antes estaba running.
