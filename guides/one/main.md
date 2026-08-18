@@ -100,7 +100,20 @@ a) Dibujar las puntas de flechas que correspondan.
         -> Terminated (terminó su ejecución)
     - Blocked
         -> Ready (recibió lo que necesitaba para seguir ejecutando)
+
 b) Explicar qué causa cada transición y qué componentes *(scheduler, proceso, etc.)* estarían involucrados.
+    - New 
+        -> Ready (Proceso hace fork())
+    - Ready 
+        -> Running (scheduler. quantum.)
+    - Running
+        -> Ready (quantum. scheduler.)
+        -> Blocked (interrupción. scheduler.)
+        -> Terminated (¿código + scheduler?)
+    - Blocked
+        -> Ready (interrupción + scheduler)
 
 Preguntar:
 1. ¿Qué pasa en el caso de que en la PCB el proceso está BLOCKED pero un padre te tira un SIGTERM? ¿No pasaría de BLOCKED a TERMINATED? Para mí faltan flechas o este es un modelo simplificado que "asume que termina" solo si antes estaba running.
+2. ¿Para qué queremos el estado new? Para solamente "notar" que no debería estar en la PCB? Porque en realidad, en la PCB ya arrancaría en READY.
+3. ¿Qué componentes estarían involucrados en el New -> Ready? Xq desde un punto de vista sencillo, con un "fork()" un proceso crea otro proceso y listo. 
