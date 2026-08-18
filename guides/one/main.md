@@ -39,6 +39,7 @@ Preguntas:
 ¿En dónde tengo el PC? Como para agarrarlo.
 ¿Está bien asumir que el proceso a desalojar lo guardamos como ready porque se "acabó su quantum"? 
 ¿El orden de las operaciones es indistinto, sin contar el ret()? Porque supongo que si tenés el ret primero y no preparaste lo otro, rompiste todo. 
+¿Los pasos que corresponden al paso 1, son los que necesita solo la CPU para seguir ejecutando? ¿O cosas como "CPU_TIME" realmente son importantes?
 
 void ke_context_switch(PCB* pcb_0, PCB* pcb_1){
     //Preservo en la PCB_0 los valores de los registros
@@ -68,3 +69,16 @@ void ke_context_switch(PCB* pcb_0, PCB* pcb_1){
     ret();
 }
 ```
+
+2. Identificar en el programa escrito cuáles son los pasos del ejercicio 1.
+
+Nos interesan aquellos pasos que afectan a la ejecución en la CPU para que el proceso pueda continuar exactamente donde estaba.
+Por lo tanto, los pasos del ejercicio 1 son: 
+- Preservar Contexto: PC, R0...R15
+- Restaurar Contexto: R0...R15, PC.
+
+## Ejercicio 3: Describir la diferencia entre un system call y una llamada a una función de biblioteca
+Una llamada a función de biblioteca es una llamada a código que forma parte de una biblioteca y normalmente comienza/ejecuta en user space. 
+Una system call es el mecanismo mediante el cual un proceso solicita un servicio al kernel, provocando una transición controlada de user mode a kernel mode. 
+
+Una función de biblioteca puede o no realizar internamente una system call.
