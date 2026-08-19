@@ -27,11 +27,11 @@ Todo es con respecto al proceso que va a ser desalojado.
 *pcb_1* es el puntero al PCB del proceso a ser ejecutado a continuación.
 
 Para implementarla, se cuenta con un lenguaje que posee acceso a los registros de procesador R0, R1, ..., R15 y las siguientes operaciones
-.=.; //asignación entre registros y memoria
-int ke_current_user_time() // devuelve el valor del cronómetro.
-void ke_reset_current_user_time() //resetea el cronómetro
-void ret(); // desapila el tope de la pila y reemplaza el PC
-void set_current_process(int pid) //asigna al proceso con el pid como el siguiente a ejecutarse.
+1. .=.; //asignación entre registros y memoria
+2. int ke_current_user_time() // devuelve el valor del cronómetro.
+3. void ke_reset_current_user_time() //resetea el cronómetro
+4. void ret(); // desapila el tope de la pila y reemplaza el PC
+5. void set_current_process(int pid) //asigna al proceso con el pid como el siguiente a ejecutarse.
 
 ```c
 Preguntas:
@@ -153,24 +153,24 @@ Una solución "no tan buena" sería como está en el archivo *5-first-solution.c
 
 1. Lo bueno es que claramente entendí que después de fork(), padre e hijo tienen espacios de direcciones separados, inicialmente con el mismo contenido. El SO suele implementar esto con copy-on-write, pero conceptualmente cada proceso tiene su propia memoria.
 2. Solucioné el estado huérfano de Maggie usando un sleep(1000), que es totalmente impreciso, porque sería mejor que Homero permanezca vivo hasta que sus hijos terminen. Pero obviamente ahí nos metemos en otro mundo. Esta excepción se usó solamente asumiendo que los hijos van a tardar menos de 1s en crearse *(o podrían no hacerlo)*
-
+```s
 [ABRAHAM][PID: 22114] Hola! 
 [HOMERO][PID: 22115][PPID: 22114] douh! 
 [BART][PID: 22116][PPID: 22115] que hay de nuevo viejo 
 [LISA][PID: 22117][PPID: 22115] todo el maldito sistema está mal! 
 [MAGGIE][PID: 22118][PPID: 22115] chup-chup 
-
+```
 Una solución "mejor" sería como está en el archivo *5-second-solution.c*.
 
 1. En vez de utilizar la condición de *parent == getpid()* opté por "terminar" cada proceso hijo en el mismo lugar. ¿Para qué? Para que no tenga que asumir que todo el código que sigue debajo, debe ser ejecutado por el resto. Y; en este contexto tiene sentido, porque si estamos hablando de "Crear Hijos" no tiene sentido que "Bart" deba hacer una excepción para no tener una hija Lisa. En este caso, la semántica está bien.
 2. El problema sigue siendo el sleep(). ¿Por qué? Porque estamos confiando en que en el contexto de "Abraham", si asumimos que los forks tardan mucho, podría suceder que te duermas por 1s pero no sea suficiente para que el resto de forks se hayan hecho.
-
+```s
 [ABRAHAM][PID: 26087] Hola! 
 [HOMERO][PID: 26088][PPID: 26087] douh! 
 [LISA][PID: 26090][PPID: 26088] todo el maldito sistema está mal! 
 [BART][PID: 26089][PPID: 26088] que hay de nuevo viejo 
 [MAGGIE][PID: 26091][PPID: 26088] chup-chup 
-
+```
 La mejor solución, en mi opinión, es *5-third-solution.c*. Acá usamos wait() para bloquear al padre hasta que alguno de sus hijos termine y así poder recolectar su estado de terminación.
 1. Le dimos la semántica correcta. Bart, Lisa y Maggie no llegan a ejecutar los fork() destinados a crear a sus hermanos, porque cada uno termina inmediatamente después de imprimir.
 2. Ya no usamos tiempos que podrían cambiar, sino que usamos wait(NULL) para esperar a que alguno de los procesos hijo termine y recolectar su estado de terminación.
@@ -181,3 +181,10 @@ sólo después que terminen Bart, Lisa y Maggie, y 2) Abraham termine sólo desp
 Homero
 
 Es el paso natural hecho con el wait() para sacarnos el sleep de encima.
+
+## Ejercicio 6.
+Se agrega la llamada al sistema *void exec(const char *arg)*. 
+
+Esta llamada al sistema reemplaza el programa actual por el código localizado en el string *(char *arg)*. 
+
+Implementar una llamada al sistema que tenga el mismo comportamiento que la llamada *void system(const char *arg)*, usando las llamadas al sistema ofrecidas por el sistema operativo. 
