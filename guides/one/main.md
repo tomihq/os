@@ -145,14 +145,14 @@ Notar que cuando hacemos pid_child_bart = fork() tenemos dos ramificaciones en e
 - Homero
 - Bart
 Entonces ambos van a llegar a hacer pid_child_lisa = fork(). 
-Acá necesitamos que los "fork" no se conozcan entre sí, o explícitamente decir: "que lisa solo lo crea el PPID" de homero.
+Acá necesitamos evitar que Bart continúe ejecutando el código que crea a Lisa y Maggie. Es decir, sólo Homero debe alcanzar esos fork().
 
-Maggie nace como hija de: Bart, Lisa y un padre recoletor. Eso es porque Homero terminó mientras que Maggie justo estaba siendo creada.
+Algunas instancias de Maggie aparecen con un PPID correspondiente a otro proceso porque su padre original terminó antes de que Maggie ejecutara getppid(). Al quedar huérfana, el sistema la reparenta a otro proceso.
 
 Una solución "no tan buena" sería como está en el archivo *5-first-solution.c*. Tiene cosas buenas, pero analicemos por separado.
 
 1. Lo bueno es que claramente entendí que después de fork(), padre e hijo tienen espacios de direcciones separados, inicialmente con el mismo contenido. El SO suele implementar esto con copy-on-write, pero conceptualmente cada proceso tiene su propia memoria.
-2. Solucioné el estado huérfano de Maggie usando un sleep(1000), que es totalmente impreciso, porque mejor sería que "Homero espere" a que los hijos sean creados. Pero obviamente ahí nos metemos en otro mundo. Esta excepción se usó solamente asumiendo que los hijos van a tardar menos de 1s en crearse *(o podrían no hacerlo)*
+2. Solucioné el estado huérfano de Maggie usando un sleep(1000), que es totalmente impreciso, porque sería mejor que Homero permanezca vivo hasta que sus hijos terminen. Pero obviamente ahí nos metemos en otro mundo. Esta excepción se usó solamente asumiendo que los hijos van a tardar menos de 1s en crearse *(o podrían no hacerlo)*
 
 [ABRAHAM][PID: 22114] Hola! 
 [HOMERO][PID: 22115][PPID: 22114] douh! 
@@ -171,7 +171,7 @@ Una solución "mejor" sería como está en el archivo *5-second-solution.c*.
 [BART][PID: 26089][PPID: 26088] que hay de nuevo viejo 
 [MAGGIE][PID: 26091][PPID: 26088] chup-chup 
 
-La mejor solución, en mi opinión, es *5-third-solution.c*. Acá estaríamos usando *wait* para esperar que los hijos nos den alguna señal de que terminaron.
+La mejor solución, en mi opinión, es *5-third-solution.c*. Acá usamos wait() para bloquear al padre hasta que alguno de sus hijos termine y así poder recolectar su estado de terminación.
 1. Le dimos la semántica correcta. Bart, Lisa y Maggie no llegan a ejecutar los fork() destinados a crear a sus hermanos, porque cada uno termina inmediatamente después de imprimir.
 2. Ya no usamos tiempos que podrían cambiar, sino que usamos wait(NULL) para esperar a que alguno de los procesos hijo termine y recolectar su estado de terminación.
 Notar que acá asumimos que van a terminar.
