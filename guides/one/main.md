@@ -243,3 +243,38 @@ Una shell podría no estar disponible por:
 Si no ocurre ninguna de esas condiciones, esperamos que system(NULL) indique que hay una shell disponible. Esto no significa que exista una instancia de shell reservada o esperando ser utilizada, sino que el sistema puede ejecutar una shell en ese momento. 
 
 Múltiples procesos pueden ejecutar /bin/sh simultáneamente, por lo que no existe una condición de carrera relacionada con “quedarse sin shells” ni es necesario utilizar locks.
+
+## Ejercicio 7
+Programar en C el ejercicio 5b y 6. Ya están hechos, ja.
+
+## Ejercicio 8
+Veamos el siguiente fragmento de código de un fork
+```c
+int main(int argc, char const *argv[]) {
+    int dato = 0;
+
+    pid_t pid = fork();
+
+    // Si no hay error, pid vale 0 para el hijo
+    // y el valor del process id del hijo para el padre
+    if (pid == -1)
+        exit(EXIT_FAILURE); // si es -1, hubo un error
+    else if (pid == 0) {
+        for (int i = 0; i < 3; i++) {
+            dato++;
+            printf("Dato hijo: %d\n", dato);
+        }
+    }
+    else {
+        for (int i = 0; i < 3; i++) {
+            printf("Dato padre: %d\n", dato);
+        }
+    }
+
+    exit(EXIT_SUCCESS); // cada uno finaliza su proceso
+}
+```
+¿Son iguales los resultados mostrados de la variable `dato` para el padre y para el hijo? ¿Qué está sucediendo?
+No. No son iguales. Cuando hacemos un fork(), padre e hijo tienen espacios de direcciones virtuales separados, aunque inicialmente contienen la misma información. Mediante copy-on-write, sus páginas pueden apuntar inicialmente a las mismas páginas físicas. Cuando alguno de los procesos intenta escribir en una de ellas, el SO crea una copia privada de esa página para ese proceso.
+
+## Ejercicio 9
