@@ -99,6 +99,13 @@ system()
 
 int system(const char *command)
 {
+   if (command == NULL) {
+        if (access("/bin/sh", X_OK) == 0) {
+            return 1; 
+        }
+        return 0;     
+    }
+    
     pid_t child = fork(); 
     if(child < 0){
         //el fork() ya setea errno
