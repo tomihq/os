@@ -61,12 +61,12 @@ int main(void)
             }
         }
 
-        char response;
+        int response;
 
-        printf("Wanna end the execution? [s/n]: ");
-        scanf(" %c", &response);
+        printf("Wanna end the execution? [1 = yes / 0 = no]: ");
+        scanf("%d", &response);
 
-        if (response == 's') {
+        if (response == 1) {
             continue_execution = 0;
         }
     }

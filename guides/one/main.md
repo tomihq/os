@@ -308,3 +308,11 @@ Puedo usar `pause()` para colgar un proceso hasta que llegue una señal, pero es
 Por lo tanto necesito:
 - Espero la señal X particular, que el proceso padre e hijo escuchan. El resto no las escucho, no me interesan.
 - Verifico que cuando llegue la señal X, sea o bien el padre o el hijo.
+
+--
+
+Acerca de la solución
+1. Asumo que el `SIGTERM` al hijo solo lo envía el padre. De lo contrario, deberíamos verificar desde el hijo, que sea el padre quién lo creó que lo envíe.
+2. Como las señales a escuchar son las mismas para ambos procesos, las definimos directamente en el padre. Por lo que, el hijo, tendrá esas redefiniciones por defecto.
+3. `while(1)` significa: `while(true)` y es la manera de que el hijo permanece vivo en IDLE.
+4. `kill(getpid(), SEÑAL)` es la manera de enviarnos una señal a nosotros mismos.
