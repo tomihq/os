@@ -193,7 +193,7 @@ Implementar una llamada al sistema que tenga el mismo comportamiento que la llam
 
 Aclaraciones de la solución en *6.c*
 
-1. Revisar `man system`, `man execl` y `man access`, ya que son las herramientas que vamos a utilizar y necesitamos entender bien su comportamiento.
+1. Revisar `man system`, `man execl`, ya que son las herramientas que vamos a utilizar y necesitamos entender bien su comportamiento.
 
 2. ¿Por qué necesitamos que `execl()` sea ejecutado por un proceso hijo? Para responder esto, primero hay que pensar qué comportamiento queremos de `system()`: necesitamos ejecutar un comando, esperar a que termine y luego devolver el control al programa que llamó a `system()`.
 
@@ -231,3 +231,15 @@ Aclaraciones de la solución en *6.c*
    Mientras todo esto ocurre, el padre nunca ejecuta `execl()`: como para él `child != 0`, no entra en ese `if` y continúa hasta `waitpid()`, donde queda bloqueado esperando la terminación del hijo.
 
    Cuando el hijo finalmente termina, `waitpid()` retorna, el padre continúa su ejecución y `system()` puede devolver el control al programa original.
+
+5. Si asumimos que no tenemos acceso a `access` que nos dice si hay una shell disponible, tenemos la solución `6-without-access.c` que intenta ejecutar un comando básico con `execl` en una shell. Si da todo ok, significa que la shell está disponible y pudo ejecutarse correctamente en ese momento. 
+¿Qué significa acá el "tener shell o no"? ¿Alguna condición de carrera por limitar la cantidad de ejecuciones de shell? No.
+Una shell podría no estar disponible por:
+- /bin/sh no existe.
+- /bin/sh existe pero no puede ejecutarse por permisos
+- El entorno del proceso no permite acceder a ella.
+- Hay algún problema del sistema que impide ejecutar la shell.
+
+Si no ocurre ninguna de esas condiciones, esperamos que system(NULL) indique que hay una shell disponible. Esto no significa que exista una instancia de shell reservada o esperando ser utilizada, sino que el sistema puede ejecutar una shell en ese momento. 
+
+Múltiples procesos pueden ejecutar /bin/sh simultáneamente, por lo que no existe una condición de carrera relacionada con “quedarse sin shells” ni es necesario utilizar locks.
