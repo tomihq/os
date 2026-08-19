@@ -175,3 +175,9 @@ La mejor solución, en mi opinión, es *5-third-solution.c*. Acá usamos wait() 
 1. Le dimos la semántica correcta. Bart, Lisa y Maggie no llegan a ejecutar los fork() destinados a crear a sus hermanos, porque cada uno termina inmediatamente después de imprimir.
 2. Ya no usamos tiempos que podrían cambiar, sino que usamos wait(NULL) para esperar a que alguno de los procesos hijo termine y recolectar su estado de terminación.
 Notar que acá asumimos que van a terminar.
+
+b) Modificar el programa anterior para que cumpla con las siguientes condiciones: 1) Homero termine
+sólo después que terminen Bart, Lisa y Maggie, y 2) Abraham termine sólo después que termine
+Homero
+
+Es el paso natural hecho con el wait() para sacarnos el sleep de encima.
