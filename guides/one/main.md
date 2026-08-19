@@ -278,3 +278,33 @@ int main(int argc, char const *argv[]) {
 No. No son iguales. Cuando hacemos un fork(), padre e hijo tienen espacios de direcciones virtuales separados, aunque inicialmente contienen la misma información. Mediante copy-on-write, sus páginas pueden apuntar inicialmente a las mismas páginas físicas. Cuando alguno de los procesos intenta escribir en una de ellas, el SO crea una copia privada de esa página para ese proceso.
 
 ## Ejercicio 9
+Dado un programa de dos procesos, padre e hijo, se quiere tener el siguiente comportamiento:
+
+- Uno de los dos procesos debe escribir en pantalla ping y su número de PID. 
+- Automáticamente el otro proceso debe escribir pong con su número de PID. 
+Se quiere repetir este comportamiento 3 veces.
+
+Luego de esto, se desea preguntar al usuario si quiere finalizar la ejecución o no. En caso que conteste
+que si, el padre debe terminar con la ejecución de su hijo y finalizar. En caso que se conteste que no,
+se vuelve a repetir el proceso antes dicho
+
+--
+
+Necesito:
+1. Mantener contador de veces en padre (PING).
+2. Mantener contador de veces en hijo (PONG).
+3. Mantener pausado un proceso mientras que el otro hace lo que tiene que hacer.
+   1. Padre - Hijo (arrancan).
+   2. Padre dice PING (manda señal) - Hijo pausado
+   3. Padre pausado - Hijo dice PONG (manda señal)
+   4. ... hasta que se haga 3 veces.
+4. El padre es el que nos dice: "¿Querés finalizar la ejecución?" (xq viene después del último PONG).
+   1. Si damos SÍ, terminamos la ejecución del hijo y liberamos los recursos y finalizamos el programa padre.
+   2. Si damos NO, volvemos a ejecutar todo desde 0 (el flujo de PING/PONG).
+
+Necesito señales, implementar alguna señal en particular que ambos entiendan y verificar que son ellos quién la envió antes de hacer algo.
+Puedo usar `pause()` para colgar un proceso hasta que llegue una señal, pero esa señal me la podría mandar cualquier proceso *(y además ser cualquier señal que no espero)*. 
+
+Por lo tanto necesito:
+- Espero la señal X particular, que el proceso padre e hijo escuchan. El resto no las escucho, no me interesan.
+- Verifico que cuando llegue la señal X, sea o bien el padre o el hijo.
