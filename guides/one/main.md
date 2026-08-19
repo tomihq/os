@@ -188,3 +188,46 @@ Se agrega la llamada al sistema *void exec(const char *arg)*.
 Esta llamada al sistema reemplaza el programa actual por el código localizado en el string *(char *arg)*. 
 
 Implementar una llamada al sistema que tenga el mismo comportamiento que la llamada *void system(const char *arg)*, usando las llamadas al sistema ofrecidas por el sistema operativo. 
+
+--
+
+Aclaraciones de la solución en *6.c*
+
+1. Revisar `man system` y `man execl`, ya que son las herramientas que vamos a utilizar y necesitamos entender bien su comportamiento.
+
+2. ¿Por qué necesitamos que `execl()` sea ejecutado por un proceso hijo? Para responder esto, primero hay que pensar qué comportamiento queremos de `system()`: necesitamos ejecutar un comando, esperar a que termine y luego devolver el control al programa que llamó a `system()`.
+
+   El problema es que `execl()` reemplaza el programa que está ejecutando el proceso actual. Si tiene éxito, no retorna. Por lo tanto, si ejecutáramos `execl()` directamente desde el proceso que llamó a `system()`, perderíamos el programa original y nunca podríamos retornar a él.
+
+   La solución es:
+
+   ```
+   crear hijo -> hijo ejecuta execl() -> padre espera al hijo -> system() retorna
+   ```
+
+   De esta manera, el proceso hijo es el que reemplaza su programa mediante `execl()`, mientras que el padre conserva el programa original y queda esperando su terminación.
+
+   Si `fork()` falla y no podemos crear al hijo, `system()` retorna inmediatamente con `-1`. El responsable de indicar la causa del error es `fork()`, que deja seteado `errno`.
+
+3. El caso `command == NULL` es especial. En este caso no se intenta ejecutar ningún comando, sino que `system()` debe comprobar si existe una shell disponible:
+
+   * Retorna un valor distinto de `0` si hay una shell disponible.
+   * Retorna `0` si no la hay.
+
+4. Después de `fork()`, padre e hijo siguen caminos de ejecución diferentes.
+
+   El hijo entra en:
+
+   ```
+   if (child == 0)
+   ```
+
+   y ejecuta `execl()`.
+
+   Si `execl()` tiene éxito, el hijo deja de ejecutar nuestro programa y pasa a ejecutar `/bin/sh`. Por lo tanto, nunca alcanza las instrucciones posteriores al `execl()`.
+
+   Si `execl()` falla, retorna `-1` y el hijo continúa ejecutando nuestro código. Por eso, en ese caso sí alcanza el `printf()` del error y posteriormente `_exit(127)`.
+
+   Mientras todo esto ocurre, el padre nunca ejecuta `execl()`: como para él `child != 0`, no entra en ese `if` y continúa hasta `waitpid()`, donde queda bloqueado esperando la terminación del hijo.
+
+   Cuando el hijo finalmente termina, `waitpid()` retorna, el padre continúa su ejecución y `system()` puede devolver el control al programa original.
