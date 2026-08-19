@@ -105,7 +105,7 @@ int system(const char *command)
         }
         return 0;     
     }
-    
+
     pid_t child = fork(); 
     if(child < 0){
         //el fork() ya setea errno
@@ -123,6 +123,7 @@ int system(const char *command)
 
     int status;
     
+    // Notar que esto puede NO terminar si el child se queda infinitamente loopeando. 
     if (waitpid(child, &status, 0) == -1) {
         printf("[ERROR] waitpid failed: %d\n", errno);
         return -1;

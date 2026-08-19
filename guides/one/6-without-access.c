@@ -143,6 +143,7 @@ int system(const char *command)
 
     int status;
 
+    // Notar que esto puede NO terminar si el child se queda infinitamente loopeando. 
     if (waitpid(child, &status, 0) == -1)
     {
         printf("[ERROR] waitpid failed: %d\n", errno);
