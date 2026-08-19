@@ -193,7 +193,7 @@ Implementar una llamada al sistema que tenga el mismo comportamiento que la llam
 
 Aclaraciones de la solución en *6.c*
 
-1. Revisar `man system` y `man execl`, ya que son las herramientas que vamos a utilizar y necesitamos entender bien su comportamiento.
+1. Revisar `man system`, `man execl` y `man access`, ya que son las herramientas que vamos a utilizar y necesitamos entender bien su comportamiento.
 
 2. ¿Por qué necesitamos que `execl()` sea ejecutado por un proceso hijo? Para responder esto, primero hay que pensar qué comportamiento queremos de `system()`: necesitamos ejecutar un comando, esperar a que termine y luego devolver el control al programa que llamó a `system()`.
 
