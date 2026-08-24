@@ -452,4 +452,81 @@ int main() {
         }
     }
 }
+
+b) Modificar el programa anterior para que cumpla con las siguientes condiciones: 1) Padre cree dos
+procesos hijos en lugar de uno, y 2) se respete esta nueva secuencia de mensajes entre los tres
+procesos.
+
+PREGUNTAR SI ESTÁ OK esto de que al Hijo 1 lo dejo colgado hasta que creo al Hijo 2, y después le paso al Hijo 1 la referencia de su hermano.
+
+1. Padre crea hijo 1.
+2. Padre crea hijo 2. Notar que el hijo 2 conoce al hijo 1 gracias a que lo comparte con el padre. Pero no al revés.
+3. Padre envía PID del hijo 2 al hijo 1.
+4. Hijo 1 recibe el PID del hijo 2. Lo almacena en su memoria de manera privada.
+5. Padre inicializa loop infinito. Envía a hijo 1 el valor. Se queda esperando respuesta de hijo 2.
+6. Hijo 1 que espera al padre, se despierta, y envía el valor al hijo 2.
+7. Hijo 2 que espera al hijo 1, se despierta, y envía el valor al padre.
+8. Repite desde 5.
+9. Flujo de terminación: (PREGUNTAR si está ok)
+    1. Hijo 2 manda 50 al Padre.
+    2. El Padre recibe 50 y sabe que terminó la secuencia.
+    3. El Padre hace bsend(Hijo1, -1).
+        - Como la cola tiene capacidad 0, queda bloqueado hasta que Hijo 1 haga breceive().
+    4. Hijo 1 recibe -1 y sabe que debe terminar.
+    5. Hijo 1 hace bsend(Hijo2, -1).
+   - Queda bloqueado hasta que Hijo 2 haga breceive().
+    6. Hijo 2 recibe -1 y sabe que debe terminar.
+    7. Hijo 1 termina.
+    8. El Padre termina.
+
+
+int main() {
+    pid_t parent = getpid();
+    pid_t child_1 = fork();
+    int i = 0; 
+    
+    //Hijo 1
+    if (child_1 == 0) {
+        //Hijo 1 espera hasta que el Padre le diga quién es Hijo 2.
+        pid_t child_2 = breceive(parent);
+        while (1) {
+            i = breceive(parent);
+            if(i == -1){
+                bsend(child_2, -1);
+                exit(EXIT_SUCCESS);
+            }
+            bsend(child_2, i + 1);
+        }
+
+    } else {
+        pid_t child_2 = fork(); 
+
+        // Hijo 2
+        if(child_2 == 0){
+            //Espera siempre mensajes de su hermano (Hijo 1)
+            while(1){
+                i = breceive(child_1);
+                if(i == -1){
+                    exit(EXIT_SUCCESS);
+                }
+                bsend(parent, i+1); 
+            }      
+
+        }
+        // Padre
+        else {
+            //Padre envía al Hijo1, el valor de Hijo2.
+            bsend(child, child_2);
+            while (1) {
+                bsend(child_1, i);
+                i = breceive(child_1) + 1;
+                if(i == 50){
+                    bsend(child_1, -1);
+                    exit(EXIT_SUCCESS);
+                }
+            }
+        }
+
+    }
+}
 ```
