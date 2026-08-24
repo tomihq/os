@@ -318,3 +318,138 @@ Acerca de la solución
 4. `kill(getpid(), SEÑAL)` permite que un proceso se envíe una señal a sí mismo.
 5. Para finalizar correctamente la ejecución del padre, primero esperamos específicamente la terminación del hijo mediante: `waitpid(child, NULL, 0);` 
 6. Manejamos la sincronización de turnos mediante una variable global `signal_received`. El handler modifica esta variable cuando llega la señal esperada, y el flujo normal del proceso continúa únicamente cuando dicha señal fue recibida.
+
+## Ejercicio 10
+Voy a explicar lo relevante que veo del trace. Ojo, el trace puede no ser exactamente igual, porque el scheduler puede tomar distintas decisiones. Sin embargo, el comportamiento general y las relaciones de orden que dependen del programa deberían mantenerse.
+
+Lo primero que veo relevante es:
+
+clone(child_stack=NULL, flags=CLONE_CHILD_CLEARTID|CLONE_CHILD_SETTID|SIGCHLDstrace: Proce, child_tidptr=0x2460b50) = 10552
+[pid 10551] write(1, "Soy Juan\n\0", 10) = 10
+[pid 10552] write(1, "Soy Julieta\n", 12 <unfinished ...>
+[pid 10551] clock_nanosleep(CLOCK_REALTIME, 0, {tv_sec=1, tv_nsec=0}, <unfinished ...>
+[pid 10552] <... write resumed>) = 12
+[pid 10552] clock_nanosleep(CLOCK_REALTIME, 0, {tv_sec=1, tv_nsec=0}, <unfinished ...>
+[pid 10551] <... clock_nanosleep resumed>0x7ffe6cd07ca0) = 0
+
+1. Juan tiene un hijo.
+2. Juan saluda.
+3. Julieta saluda.
+4. Juan se duerme por 1 segundo.
+5. Julieta se duerme por 1 segundo.
+
+Después, viene esto:
+
+[pid 10551] <... clock_nanosleep resumed>0x7ffe6cd07ca0) = 0
+[pid 10551] wait4(-1, <unfinished ...>
+
+1. Juan se despierta.
+2. Juan se pone en pausa esperando que Julieta finalice.
+
+Después viene esto:
+
+[pid 10552] <... clock_nanosleep resumed>0x7ffe6cd07ca0) = 0
+[pid 10552] clone(child_stack=NULL, flags=CLONE_CHILD_CLEARTID|CLONE_CHILD_SETTID|SIGCHLDs, child_tidptr=0x2460b50) = 10557
+[pid 10557] write(1, "Soy Jennifer\n\0", 14 <unfinished ...>
+
+1. Julieta se despierta del sleep.
+2. Julieta tiene una hija. Se llama Jennifer.
+3. Jennifer saluda.
+
+Luego viene esto:
+
+[pid 10552] exit_group(0) = ?
+[pid 10557] clock_nanosleep(CLOCK_REALTIME, 0, {tv_sec=1, tv_nsec=0}, <unfinished ...>
+[pid 10552] +++ exited with 0 +++
+
+Eso quiere decir que después de que nació Jennifer:
+
+1. Julieta manda exit().
+2. Jennifer se duerme por 1 segundo.
+3. Julieta termina.
+
+Luego viene esto:
+
+[pid 10551] <... wait4 resumed>[{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 10552
+[pid 10551] --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=10552, si_uid=1000,
+[pid 10551] clone(child_stack=NULL, flags=CLONE_CHILD_CLEARTID|CLONE_CHILD_SETTID|SIGCHLDstrace: Process 10558 attached
+[pid 10551] exit_group(0) = ?
+[pid 10558] write(1, "Soy Jorge\n", 10) = 10
+[pid 10558] clock_nanosleep(CLOCK_REALTIME, 0, {tv_sec=1, tv_nsec=0}, <unfinished ...>
+
+1. Juan continúa su ejecución.
+2. Juan recibe que su hija, Julieta, terminó (relacionado al wait de antes).
+3. Juan tiene un nuevo hijo.
+4. Juan manda exit().
+5. Jorge nace e imprime el write.
+6. Jorge se duerme por 1 segundo.
+
+Luego viene esto:
+
+[pid 10551] +++ exited with 0 +++
+[pid 10557] <... clock_nanosleep resumed>0x7ffe6cd07ca0) = 0
+[pid 10557] exit_group(0) = ?
+[pid 10558] <... clock_nanosleep resumed>0x7ffe6cd07ca0) = 0
+[pid 10558] exit_group(0) = ?
+[pid 10557] +++ exited with 0 +++
++++ exited with 0 +++
+
+1. Juan termina.
+2. Jennifer se despierta del sleep.
+3. Jennifer manda exit().
+4. Jorge se despierta del sleep.
+5. Jorge manda exit().
+6. Jennifer termina.
+7. Jorge termina.
+
+exit_group: solicita terminar el programa.
+exited: avisa que ya terminó.
+
+Ejecuto mi código con:
+
+strace -q -f ./archivo
+
+## Ejercicio 11
+```c
+void bsend(pid dst, int msg): envia el valor msg al proceso dst
+int breceive(pid src): recibe un mensaje del proceso src.
+
+Las llamadas son bloqueantes (no se pueden encolar mensajes. Eso quiere decir que si mandás un mensaje, tenés que esperar sí o sí que te lo reciban).
+No tenemos ningún buffer que nos permita seguir "trabajando". 
+
+pid get_current_pid(): devuelve el process id que hace la llamada a bsend o breceive.
+
+a) Escribir un programa que cree un segundo proceso, para luego efectuar la siguiente secuencia de
+mensajes entre ambos
+Padre envía a Hijo el valor i
+Hijo envía a Padre el valor i+1
+Padre envía a Hijo el valor i+2
+...
+
+pseudocódigo:
+    1. Obtenés el PID del padre.
+    2. Creás el hijo.
+    3. Verificás child == 0
+        a. Caso True: hacés un while(1) porque te tenés que quedar escuchando. Hacés el receive del padre, tomás el valor, le sumás uno y lo mandás al padre. Luego, repetís.
+        b. Caso False: hacés un while(1) porque te tenés que quedar escuchando. Mandás al hijo el valor, luego te quedás escuchando el valor que te manda. Lo recibís, y se repite el proceso.
+código:
+int main() {
+    pid_t parent = getpid();
+    pid_t child = fork();
+
+    if (child == 0) {
+        while (1) {
+            int i = breceive(parent);
+            bsend(parent, i + 1);
+        }
+
+    } else {
+        int i = 0;
+
+        while (1) {
+            bsend(child, i);
+            i = breceive(child) + 1;
+        }
+    }
+}
+```
