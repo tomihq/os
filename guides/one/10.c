@@ -1,69 +1,88 @@
 /*
-Voy a explicar lo relevante que veo del trace. Ojo, no tengo la certeza de que las cosas estaban en el código con ese orden.
+Voy a explicar lo relevante que veo del trace. Ojo, el trace puede no ser exactamente igual, porque el scheduler puede tomar distintas decisiones. Sin embargo, el comportamiento general y las relaciones de orden que dependen del programa deberían mantenerse.
 
-Lo primero que veo relevante es
+Lo primero que veo relevante es:
 clone(child_stack=NULL, flags=CLONE_CHILD_CLEARTID|CLONE_CHILD_SETTID|SIGCHLDstrace: Proce, child_tidptr=0x2460b50) = 10552
 [pid 10551] write(1, "Soy Juan\n\0", 10) = 10
 [pid 10552] write(1, "Soy Julieta\n", 12 <unfinished ...>
 [pid 10551] clock_nanosleep(CLOCK_REALTIME, 0, {tv_sec=1, tv_nsec=0}, <unfinished ...>
+[pid 10552] <... write resumed>) = 12
 [pid 10552] clock_nanosleep(CLOCK_REALTIME, 0, {tv_sec=1, tv_nsec=0}, <unfinished ...>
+[pid 10551] <... clock_nanosleep resumed>0x7ffe6cd07ca0) = 0
 
-Esto quiere decir que, porque el primer clone no tiene [pid] asumo que es el padre (Juan) que crea un hijo llamada Julieta.
-Notar que el clone está antes del print
-Asi que seguro sea 
+1. Juan tiene un hijo.
+2. Juan saluda.
+3. Julieta saluda.
+4. Juan se duerme por 1 segundo.
+5. Julieta se duerme por 1 segundo.
 
-fork()
-imprimir soy juan
-imprimir soy julieta
+Después, viene esto:
+[pid 10551] <... clock_nanosleep resumed>0x7ffe6cd07ca0) = 0
+[pid 10551] wait4(-1, <unfinished ...>
 
-Luego, Juan se pone a dormir por 1 segundo. Luego Julieta hace lo mismo.
+1. Juan se despierta.
+2. Juan se pone en pausa esperando que Julieta finalice.
 
-Después, viene esto
-[pid 10551] wait4(-1, <unfinished ...> Juan empieza a escuchar que Julieta termine.
-
-Después viene esto
+Después viene esto:
+[pid 10552] <... clock_nanosleep resumed>0x7ffe6cd07ca0) = 0
 [pid 10552] clone(child_stack=NULL, flags=CLONE_CHILD_CLEARTID|CLONE_CHILD_SETTID|SIGCHLDs, child_tidptr=0x2460b50) = 10557
 [pid 10557] write(1, "Soy Jennifer\n\0", 14 <unfinished ...>
 
-Eso nos dice que Julieta hizo un fork(), es decir, tuvo una hija y se llama Jennifer.
+1. Se levanta del Sleep Julieta.
+2. Julieta tiene una hija. Se llama Jennifer.
+3. Jennifer saluda.
 
-Luego viene esto
+Luego viene esto:
+
 [pid 10552] exit_group(0) = ?
 [pid 10557] clock_nanosleep(CLOCK_REALTIME, 0, {tv_sec=1, tv_nsec=0}, <unfinished ...>
 [pid 10552] +++ exited with 0 +++
+
 Eso quiere decir que después de que nació Jennifer:
+
 1. Julieta manda exit.
 2. Jennifer se duerme por 1 segundo.
-3. Julieta termina
+3. Julieta termina.
 
-Luego viene esto
+Luego viene esto:
 [pid 10551] <... wait4 resumed>[{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 10552
+[pid 10551] --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=10552, si_uid=1000,
 [pid 10551] clone(child_stack=NULL, flags=CLONE_CHILD_CLEARTID|CLONE_CHILD_SETTID|SIGCHLDstrace: Process 10558 attached
 [pid 10551] exit_group(0) = ?
 [pid 10558] write(1, "Soy Jorge\n", 10) = 10
 [pid 10558] clock_nanosleep(CLOCK_REALTIME, 0, {tv_sec=1, tv_nsec=0}, <unfinished ...>
 
-1. Como Julieta (hija de Juan) terminó, ahora Juan tiene un nuevo hijo.
-2. Juan manda exit().
-3. Nace Jorge, imprime el write y se duerme 1s.
+1. Juan sigue su ejecución.
+2. Juan recibe que su hija, Julieta terminó (relacionado al wait de antes).
+3. Juan tiene un nuevo hijo.
+4. Juan manda exit().
+5. Nace Jorge, imprime el write.
+6. Jorge se duerme 1s.
 
 Luego viene esto
+[pid 10551] +++ exited with 0 +++
+[pid 10557] <... clock_nanosleep resumed>0x7ffe6cd07ca0) = 0
 [pid 10557] exit_group(0) = ?
-Eso nos quiere decir que Jennifer termina su proceso.
-
-Luego viene esto
+[pid 10558] <... clock_nanosleep resumed>0x7ffe6cd07ca0) = 0
 [pid 10558] exit_group(0) = ?
-Eso nos quiere decir que Jorge termina su proceso.
-
-Por último, termina el proceso padre.
 [pid 10557] +++ exited with 0 +++
++++ exited with 0 +++
+
+1. Termina Juan.
+2. Se levanta del sleep Jennifer.
+3. Jennifer manda exit()
+4. Se levanta del sleep Jorge
+5. Jorge manda exit()
+6. Jennifer termina.
+7. Jorge termina.
+
 
 exit_group: solicita terminar el programa.
-exited: avisa que ya terminó
+exited: avisa que ya terminó.
 
-Ejecuto mi código con: stract -q -f ./archivo 
+Ejecuto mi código con:
 
-
+stract -q -f ./archivo
 */
 
 #include <stdio.h>
