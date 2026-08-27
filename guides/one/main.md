@@ -740,3 +740,4 @@ Primero necesitamos entender bien que hace: `ls -al | wc -l`.
 4. Ejecutamos el comando `ls -al` en el subproceso1
 5. Ejecutamos el comando `wc -l` en el subproceso2.
 6. Cerrar los descriptores no utilizados en cada subproceso (eliminamos referencias hacia descriptores y permite retornar el EOF).
+
