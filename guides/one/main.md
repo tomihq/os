@@ -573,27 +573,115 @@ Explicar por qué esta secuencia no es realizable en el sistema operativo descri
 
 Las funciones bsend() y breceive() son bloqueantes (como en el ejercicio anterior).
 
-Uno de los problemas de la secuencia descripta es que continuamente uno necesita del otro. 
+Uno de los problemas de la secuencia descripta es que las operaciones de comunicación introducen una dependencia de sincronización entre ambos procesos.
+
 En particular, veamos qué sucede si el `proceso_izquierda()` es creado primero.
 Cuando es creado, lo primero que hace es enviarle un mensaje a `pid_derecha`. Como `bsend` es bloqueante, el `proceso_izquierda()` va a quedar bloqueado hasta que el `proceso_derecha()` haga el `breceive` correspondiente.
-El `proceso_derecha` hace el `computo_muy_dificil_2();` en su propio procesador, recibe el mensaje de `proceso_izquierda()` que contiene el valor de 0, y por último, el `proceso_derecha()` muestra el resultado de `computo_muy_dificil_2` y el 0 que le mandó el `proceso_izquierda()`
+El `proceso_derecha` hace el `computo_muy_dificil_2();` en su propio procesador, recibe el mensaje de `proceso_izquierda()` que contiene el valor de 0, y por último, el `proceso_derecha()` muestra el resultado de `cómputo_muy_difícil_2()` junto con el 0 enviado por `proceso_izquierda()` en esta primera iteración.
 
 Notar que el `proceso_izquierda()` se queda colgado al hacer `bsend` hasta que el `proceso_derecha()` terminó su cómputo e hizo el `breceive()`
 
 ¿Qué significa esto? 
 
-No hubo ejecuciones independientes, sino que creamos una dependencia entre el `proceso_izquierda()` y el `proceso_derecha()` solamente porque el `proceso_izquierda()` le envió un valor "0" que el `proceso_derecha()` podría conocer de antemano él también, en vez de recibir un 0 por mensaje.
+No logramos que ambos cómputos se ejecuten concurrentemente desde el comienzo, porque el `bsend()` introduce una sincronización entre los procesos. Creamos una dependencia de sincronización entre `proceso_izquierda()` y `proceso_derecha()` únicamente porque `proceso_izquierda()` debe enviar un valor 0 que `proceso_derecha()` podría conocer de antemano. Es decir, no existe una dependencia de datos real que justifique bloquear al proceso izquierdo.
 
 Por lo tanto, el diagrama es incorrecto. Porque el `proceso_izquierda()` solo arranca a hacer `computo_muy_dificil()` una vez que el `proceso_derecha()` recibió el mensaje.
 
 En conclusión: si bien ambos cómputos pueden tardar lo mismo, no aprovechamos esa dependencia porque creamos una dependencia innecesaria entre ambos que evita ejecutar los `computos` de manera concurrentes.
 
 ¿Sucede lo mismo si el `proceso_derecha()` es creado primero?
-Sí. El perjudicado sigue siendo el `proceso_izquierda()` porque no va a avanzar hasta que el `proceso_derecha()` termine el cómputo y reciba el mensaje.
+Sí. Si `proceso_derecha()` es creado primero, puede comenzar `cómputo_muy_difícil_2()`, mientras que `proceso_izquierda()` queda bloqueado en `bsend()`. Por lo tanto, tampoco se logra que ambos cómputos se ejecuten concurrentemente desde el comienzo.
 
 b) ¿Que cambios podría hacer al sistema operativo de modo de lograr la secuencia descripta en el punto anterior?
-Para lograr que los procesos ejecuten sus cómputos de manera simultánea y sin interrupciones desde el primer momento, el Sistema Operativo debe cambiar la semántica del paso de mensajes de síncronica (bloqueante) a asíncrona (no bloqueante con buffering).
+Para lograr que los procesos ejecuten sus cómputos de manera simultánea y sin interrupciones desde el primer momento, el Sistema Operativo debe cambiar la semántica de las operaciones de paso de mensajes de bloqueante a no bloqueante, utilizando buffering para desacoplar el envío de la recepción.
 
-La asincronía es adecuada en este escenario porque no existe una dependencia de datos real ni estricta que exija pausar al emisor. Al desacoplar el envío de la recepción mediante buffers en el kernel, se elimina la barrera de sincronización artificial y se aprovecha al máximo el paralelismo de los dos procesadores.
+La asincronía es adecuada en este escenario porque no existe una dependencia de datos real ni estricta que exija pausar al emisor. 
+Al desacoplar el envío de la recepción mediante buffers en el kernel, se elimina la barrera de sincronización artificial y se permite aprovechar el paralelismo disponible entre los dos procesadores.
 
-Preguntar: lo que escribí, no soluciona la "semántica", que, en mi opinión está mal planteada. Porque para mí el bsend de `proceso_izquierda()` debería estar abajo del `computo_muy_dificil_1()` porque si sigue siempre arriba, entonces va a pasar que el `proceso_derecha()` nunca va a recibir el resultado de `computo_muy_dificil_1()`. Ojo que está perfectamente bien para la "idea" de mostrar que el `proceso_izquierda()` se queda colgado esperando que tomen su mensaje, porque si pasás el `bsend` abajo no se colgaría. 
+## Ejercicio 13
+Un sistema operativo provee las siguientes llamadas al sistema para efectuar comunicación entre procesos mediante pasaje de mensajes.
+
+```c
+    bool send(pid dst, int *msg): envía al proceso dst el valor del puntero. Retorna false si la cola de mensajes estaba llena.
+
+    bool receive(pid src, int *msg): recibe del proceso src el valor del puntero. Retorna false si la cola de mensajes estaba vacía.
+```
+
+a) Modificar el programa del ejercicio 12 para que utilice estas llamadas al sistema.
+
+```c
+   int result;
+
+    void proceso_izquierda() {
+        result = 0;
+        while (true) {
+            bool sent = send(pid_derecha, &result); 
+            
+            if (!sent) {
+                printf("Error: Cola de mensajes llena. \n");
+                exit(1); 
+            }
+
+            result = cómputo_muy_difícil_1();
+        }
+    }
+
+    void proceso_derecha() {
+        int left_result; 
+        while (true) {
+            result = cómputo_muy_difícil_2();
+            
+            bool received = receive(pid_izquierda, &left_result); 
+
+            if (!received) {
+                printf("Error: Mensaje no listo en la cola. \n");
+                exit(1);
+            }
+
+            printf("%d %d\n", left_result, result); 
+        }
+    }
+```
+Esto podría ser una primera versión, pero tiene problemas: al introducir asincronía nos metemos en el mundo de que tenemos que estar al tanto de la coordinación de las cosas y las posibles condiciones de carrera. Además, una regla crítica que hay que tener siempre al tanto es: *no podemos permitir perdernos mensajes*.
+
+**Consideraciones sobre las llamadas asíncronas no bloqueantes**
+1. Manejo del fallo en `send()` (Buffer lleno)
+Asumimos que el envío nunca falla. Si `send()` retorna false, significa que el mensaje no pudo ser enviado porque la cola estaba llena. Por lo tanto, el proceso debe decidir cómo manejar esta situación. Si simplemente continúa sin reintentar, el mensaje nunca será enviado.
+
+2. Manejo del fallo en `receive()` (Buffer vacío)
+Si `receive()` retorna `false`, `left_result` no contiene necesariamente un nuevo mensaje válido. Si el proceso continúa utilizando esa variable, podría imprimir un valor no válido o correspondiente a una iteración anterior.
+
+3. Condición de carrera y tiempos de ejecución
+Dado que las funciones ya no bloquean la ejecución, surge una dependencia de tiempos (race condition):
+    Escenario: Si el `cómputo_muy_difícil_2()` finaliza antes de que el proceso_izquierda alcance a ejecutar su `send()`, la cola estará vacía al momento de llamar a `receive()`.
+
+    Alternativas de solución: 
+        - Pooling: pedir el mensaje reiteradas veces, y no desbloquearte hasta que lo hagas. La desventaja de esta es que tenés que estar muy seguro de que va a llegar. 
+        - Abortar: si no llegó el mensaje, abortás. Esta sería la peor, porque en el asincronismo no podés garantizar que algo llegue cuando lo esperás. Si el mensaje es necesario para continuar, entonces el proceso debe esperar de alguna manera a que esté disponible: mediante una operación bloqueante o mediante reintentos en el caso de una operación no bloqueante.
+
+Una mejor opción, sería: 
+```c
+    int result;
+
+    void proceso_izquierda() {
+        result = 0;
+        while (true) {
+            while (!send(pid_derecha, &result)) ; 
+            
+            result = cómputo_muy_difícil_1();
+        }
+    }
+
+    void proceso_derecha() {
+        int left_result;
+        while (true) {
+            result = cómputo_muy_difícil_2();
+            
+            while (!receive(pid_izquierda, &left_result)) ; 
+            
+            printf("%d %d", left_result, result);
+        }
+    }
+```
+
+Esta solución utiliza espera activa (busy waiting): mientras la operación falla, el proceso continúa consumiendo CPU realizando reintentos.
