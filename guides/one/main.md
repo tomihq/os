@@ -1,3 +1,7 @@
+
+
+
+
 # Guía 1: Procesos y API del S.O.
 
 ## 1. ¿Cuáles son los pasos que deben llevarse a cabo para realizar un cambio de contexto? 
@@ -731,13 +735,23 @@ Proceso B (Cliente Web):
 ```
 
 ## Ejercicio 15
-Primero necesitamos entender bien que hace: `ls -al | wc -l`.
-1. Tiene Ordinary Pipes. Eso significa que vamos a necesitar tener una dependencia de datos de manera unidireccional. Necesitamos crear el pipe.
-2. Vamos a necesitar hacer llamadas al sistema para ejecutar programas *(exec)*. En este caso, los programas serían: `ls -al` y `wc -l`. Necesitamos entonces, crear estos dos subprocesos.
-3. Todo lo que el subproceso1 escriba a stdout, el subproceso2 lo lea desde stdin.
-    - Conectamos el descriptor de stdout del subproceso1 al extremo de escritura del pipe.
-    - Conectamos el descriptor de stdin del subproceso2 al extremo del ectura del pipe.
-4. Ejecutamos el comando `ls -al` en el subproceso1
-5. Ejecutamos el comando `wc -l` en el subproceso2.
-6. Cerrar los descriptores no utilizados en cada subproceso (eliminamos referencias hacia descriptores y permite retornar el EOF).
+Primero necesitamos entender bien qué hace: `ls -al | wc -l`.
+1. Tiene **Ordinary Pipes**. Eso significa que vamos a necesitar una dependencia de datos de manera unidireccional. Necesitamos crear el pipe.
+2. Vamos a necesitar hacer llamadas al sistema para ejecutar programas **(`exec`)**. En este caso, los programas serían `ls -al` y `wc -l`. Necesitamos entonces crear estos dos subprocesos.
+3. Todo lo que el **subproceso 1** escriba a `stdout`, el **subproceso 2** lo tiene que leer desde `stdin`. Para esto, cada proceso debe cerrar los descriptores del pipe que no utiliza.
+   * Conectamos el descriptor de `stdout` del subproceso 1 al extremo de escritura del pipe.
+   * Conectamos el descriptor de `stdin` del subproceso 2 al extremo de lectura del pipe.
+4. Ejecutamos el comando `ls -al` en el subproceso 1. Su `stdout` ahora apunta al pipe, por lo que su salida queda almacenada allí.
+5. Ejecutamos el comando `wc -l` en el subproceso 2. Su `stdin` ahora apunta al pipe, por lo que lee como entrada lo que escribió `ls -al`.
+6. El padre no participa de la comunicación, por lo que cierra sus copias de los descriptores del pipe y espera a que terminen ambos subprocesos.
+
+
+## Ejercicio 16
+Implementar el inciso b del ejercicio 11 usando pipes en C. Determinar si el comportamiento del
+intercambio de mensajes obtenido es igual al especificado por las funciones bsend y breceive.
+
+La gracia de este ejercicio es darnos cuenta que necesitamos dos pipes. Uno para cada uno a la hora de enviar, y escuchar.
+
+¿Por qué? porque los Ordinary Pipes son unidireccionales y síncronos por defecto.
+
 

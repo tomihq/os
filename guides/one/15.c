@@ -1,10 +1,13 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
 
 void execute_child_1(int descriptor_escritura) {
+    //Configuramos que el STDOUT apunte al mismo archivo/recurso al que apunta el descriptor_escritura. 
     dup2(descriptor_escritura, STDOUT_FILENO);
+
     close(descriptor_escritura);
     execl("/bin/sh", "sh", "-c", "ls -al", (char *)NULL); //si esto funciona NUNCA debería pasar a lo de abajo.
     
