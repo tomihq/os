@@ -6,7 +6,7 @@
 void execute_child_1(int descriptor_escritura) {
     dup2(descriptor_escritura, STDOUT_FILENO);
     close(descriptor_escritura);
-    execl("/bin/sh", "sh", "-c", "ls", (char *)NULL); //si esto funciona NUNCA debería pasar a lo de abajo.
+    execl("/bin/sh", "sh", "-c", "ls -al", (char *)NULL); //si esto funciona NUNCA debería pasar a lo de abajo.
     
     perror("execl child 1");
 }
