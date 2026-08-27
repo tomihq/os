@@ -685,3 +685,47 @@ Una mejor opción, sería:
 ```
 
 Esta solución utiliza espera activa (busy waiting): mientras la operación falla, el proceso continúa consumiendo CPU realizando reintentos.
+
+## Ejercicio 14
+"Pensar un escenario donde tenga sentido que dos procesos (o aplicaciones) tengan entre sí un canal
+de comunicaciones bloqueante y otro no bloqueante. Describir en pseudocódigo el comportamiento de
+esos procesos."
+
+Como mencioné en el ejercicio anterior, usás comunicación bloqueante cuando necesitás sí o sí el mensaje para continuar; usás comunicación no bloqueante cuando podés continuar trabajando sin tener todavía ese mensaje.
+
+Pensemos en un Proceso A como servidor de pagos, y un Proceso B cliente (frontend/app web).
+
+Tenemos dos canales:
+- Canal de pagos: bloqueante. B necesita confirmar si la transacción fue aprobada antes de responderle al usuario.
+- Canal de notificaciones/email: no bloqueante. A y B pueden intercambiar la orden de correo sin frenar el flujo principal del cliente.
+
+```sh
+Proceso A (Servidor de Pagos):
+
+    while true:
+        datos_pago = receive_bloqueante(B)
+        resultado = procesar_tarjeta(datos_pago)
+        
+        send_bloqueante(B, resultado)
+        
+        if resultado.exitoso:
+            enviar_email_background(datos_pago.email)
+            send_no_bloqueante(B, "email_enviado")
+
+
+Proceso B (Cliente Web):
+
+    while true:
+        send_bloqueante(A, datos_pago)
+        resultado = receive_bloqueante(A) 
+        
+        if resultado.exitoso:
+            mostrar_pantalla_exito()
+
+            estado_mail = receive_no_bloqueante(A)
+            actualizar_ui_email(estado_mail)
+        else:
+            mostrar_error()
+            
+        continuar_navegando()
+```
