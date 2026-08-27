@@ -755,3 +755,44 @@ La gracia de este ejercicio es darnos cuenta que necesitamos dos pipes. Uno para
 ¿Por qué? porque los Ordinary Pipes son unidireccionales y síncronos por defecto.
 
 
+### Diferencias entre el Ejercicio 15 y Ejercicio 16
+Hay una cosa interesante:
+
+¿Por qué en el ejercicio 15 *(donde ejecutábamos comandos como `ls`)* teníamos que hacer `dup2(...)`, pero en el ejercicio 16 no?
+La clave está en **quién controla el código que hace el `read()`/`write()`**.
+
+En el ejercicio 15 nosotros ejecutábamos un programa externo como `ls`. No tenemos control sobre su código para decirle:
+```c
+write(mi_descriptor, ...);
+```
+
+`ls` ya está programado para escribir su salida en `stdout` (`STDOUT_FILENO`). Entonces, ¿cómo hacemos para que esa salida termine en nuestro pipe?
+
+Usamos `dup2(...)`:
+
+```text
+descriptor_del_pipe ──→ STDOUT_FILENO
+```
+
+De esta forma, **no modificamos el `write()` de `ls`**. `ls` sigue escribiendo en `STDOUT_FILENO`, pero ahora ese descriptor apunta al pipe en lugar de apuntar a la terminal.
+
+En otras palabras: *"Vos, `ls`, seguí escribiendo en stdout como siempre. Yo me encargo de que stdout ahora apunte al recurso que necesito."*
+
+---
+
+En el ejercicio 16, en cambio, **nosotros tenemos control sobre el código que realiza los `read()` y `write()`**.
+
+Podemos hacer directamente:
+
+```c
+write(descriptor_escritura, ...);
+read(descriptor_lectura, ...);
+```
+
+No necesitamos redirigir `stdout` ni `stdin`, porque nuestro programa **sí conoce y puede utilizar directamente los descriptores que nos interesan**.
+
+Por eso
+
+**`dup2()` es especialmente útil cuando ejecutamos un programa cuyo código no controlamos y queremos redirigir sus descriptores estándar (`stdin`, `stdout`, `stderr`).**
+
+**Si nosotros controlamos el código que hace `read()`/`write()`, podemos utilizar directamente los descriptores y no necesitamos `dup2()`.**
