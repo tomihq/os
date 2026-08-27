@@ -729,3 +729,12 @@ Proceso B (Cliente Web):
             
         continuar_navegando()
 ```
+
+## Ejercicio 15
+Primero necesitamos entender bien que hace: `ls -al | wc -l`.
+1. Tiene Ordinary Pipes. Eso significa que vamos a necesitar tener una dependencia de datos de manera unidireccional. Necesitamos crear el pipe.
+2. Vamos a necesitar hacer llamadas al sistema para ejecutar programas *(exec)*. En este caso, los programas serían: `ls -al` y `wc -l`. Necesitamos entonces, crear estos dos procesos.
+3. Vamos a necesitar redefinir los File Descriptors de los programas. La shell modificaría la conexión de los file descriptors directo a los pipes.
+    - `ls -al` deberá arrojar su resultado a stdout
+    - `wc -l` deberá consumir las entradas por stdin
+4. Recordar 
