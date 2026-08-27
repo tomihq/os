@@ -538,3 +538,62 @@ int main() {
     }
 }
 ```
+
+## Ejercicio 12
+
+```c
+int result;
+
+void proceso_izquierda() {
+    result = 0;
+    while (true) {
+        bsend(pid_derecha, result);
+        result = cómputo_muy_difícil_1();
+    }
+}
+void proceso_derecha() {
+    while(true) {
+        result = cómputo_muy_difícil_2();
+        int left_result = breceive(pid_izquierda);
+        printf("%s %s", left_result, result);
+    }
+}
+```
+
+El programa se ejecuta sobre dos procesos.
+Uno hace computo_muy_dificil_1() y el otro computo_muy_dificil_2().
+Se puede asumir que ambos son costosos y tardan prácticamente lo mismo.
+Ambos procesos se conocen a través de las variables pid_izquierda y pid_derecha.
+
+Se puede asumir que tenemos varios procesadores, y dos son dedicados a los procesos que ejecutan este programa.
+
+a) Sea la siguiente secuencia de uso de los procesadores para ejecutar los procedimientos costosos.
+*Muestra una tabla que en el segundo 1 ambos se ejecutan a la vez, en el segundo 2 ambos se ejecutan a la vez (de manera concurrente en diferentes procesadores).*
+Explicar por qué esta secuencia no es realizable en el sistema operativo descripto. Escribir una secuencia que sí lo sea.
+
+Las funciones bsend() y breceive() son bloqueantes (como en el ejercicio anterior).
+
+Uno de los problemas de la secuencia descripta es que continuamente uno necesita del otro. 
+En particular, veamos qué sucede si el `proceso_izquierda()` es creado primero.
+Cuando es creado, lo primero que hace es enviarle un mensaje a `pid_derecha`. Como `bsend` es bloqueante, el `proceso_izquierda()` va a quedar bloqueado hasta que el `proceso_derecha()` haga el `breceive` correspondiente.
+El `proceso_derecha` hace el `computo_muy_dificil_2();` en su propio procesador, recibe el mensaje de `proceso_izquierda()` que contiene el valor de 0, y por último, el `proceso_derecha()` muestra el resultado de `computo_muy_dificil_2` y el 0 que le mandó el `proceso_izquierda()`
+
+Notar que el `proceso_izquierda()` se queda colgado al hacer `bsend` hasta que el `proceso_derecha()` terminó su cómputo e hizo el `breceive()`
+
+¿Qué significa esto? 
+
+No hubo ejecuciones independientes, sino que creamos una dependencia entre el `proceso_izquierda()` y el `proceso_derecha()` solamente porque el `proceso_izquierda()` le envió un valor "0" que el `proceso_derecha()` podría conocer de antemano él también, en vez de recibir un 0 por mensaje.
+
+Por lo tanto, el diagrama es incorrecto. Porque el `proceso_izquierda()` solo arranca a hacer `computo_muy_dificil()` una vez que el `proceso_derecha()` recibió el mensaje.
+
+En conclusión: si bien ambos cómputos pueden tardar lo mismo, no aprovechamos esa dependencia porque creamos una dependencia innecesaria entre ambos que evita ejecutar los `computos` de manera concurrentes.
+
+¿Sucede lo mismo si el `proceso_derecha()` es creado primero?
+Sí. El perjudicado sigue siendo el `proceso_izquierda()` porque no va a avanzar hasta que el `proceso_derecha()` termine el cómputo y reciba el mensaje.
+
+b) ¿Que cambios podría hacer al sistema operativo de modo de lograr la secuencia descripta en el punto anterior?
+Para lograr que los procesos ejecuten sus cómputos de manera simultánea y sin interrupciones desde el primer momento, el Sistema Operativo debe cambiar la semántica del paso de mensajes de síncronica (bloqueante) a asíncrona (no bloqueante con buffering).
+
+La asincronía es adecuada en este escenario porque no existe una dependencia de datos real ni estricta que exija pausar al emisor. Al desacoplar el envío de la recepción mediante buffers en el kernel, se elimina la barrera de sincronización artificial y se aprovecha al máximo el paralelismo de los dos procesadores.
+
+Preguntar: lo que escribí, no soluciona la "semántica", que, en mi opinión está mal planteada. Porque para mí el bsend de `proceso_izquierda()` debería estar abajo del `computo_muy_dificil_1()` porque si sigue siempre arriba, entonces va a pasar que el `proceso_derecha()` nunca va a recibir el resultado de `computo_muy_dificil_1()` 
