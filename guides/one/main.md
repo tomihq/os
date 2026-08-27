@@ -35,11 +35,16 @@ Para implementarla, se cuenta con un lenguaje que posee acceso a los registros d
 
 ```c
 Preguntas:
-¿Quién incrementa CPU_TIME?
+¿Quién incrementa CPU_TIME? 
+    Rta: lo hace internamente el Kernel. Acá no nos interesa. Estamos a un mayor nivel. Podemos asumir que nos trae "ese numerito" siempre con un valor coherente.
 ¿En dónde tengo el PC? Como para agarrarlo.
-¿Está bien asumir que el proceso a desalojar lo guardamos como ready porque se "acabó su quantum"? 
+    Rta: no podés tocar el PC, lo maneja el Kernel. Acá no nos interesa. Estamos a un mayor nivel. Podemos asumir que el ret() tiene el PC que corresponde.
+¿Está bien asumir que el proceso a desalojar lo guardamos como ready porque se "acabó su quantum"?  
+    Rta: sí. 
 ¿El orden de las operaciones es indistinto, sin contar el ret()? Porque supongo que si tenés el ret primero y no preparaste lo otro, rompiste todo. 
+    Rta: sí. 
 ¿Los pasos que corresponden al paso 1, son los que necesita solo la CPU para seguir ejecutando? ¿O cosas como "CPU_TIME" realmente son importantes?
+    Rta: sí, solo los que tengan que ver con la CPU para seguir ejecutando, los indispensables, tipo los valores de los registros, el status, 
 
 void ke_context_switch(PCB* pcb_0, PCB* pcb_1){
     //Preservo en la PCB_0 los valores de los registros
