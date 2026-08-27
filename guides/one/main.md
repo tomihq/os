@@ -733,8 +733,10 @@ Proceso B (Cliente Web):
 ## Ejercicio 15
 Primero necesitamos entender bien que hace: `ls -al | wc -l`.
 1. Tiene Ordinary Pipes. Eso significa que vamos a necesitar tener una dependencia de datos de manera unidireccional. Necesitamos crear el pipe.
-2. Vamos a necesitar hacer llamadas al sistema para ejecutar programas *(exec)*. En este caso, los programas serían: `ls -al` y `wc -l`. Necesitamos entonces, crear estos dos procesos.
-3. Vamos a necesitar redefinir los File Descriptors de los programas. La shell modificaría la conexión de los file descriptors directo a los pipes.
-    - `ls -al` deberá arrojar su resultado a stdout
-    - `wc -l` deberá consumir las entradas por stdin
-4. Recordar 
+2. Vamos a necesitar hacer llamadas al sistema para ejecutar programas *(exec)*. En este caso, los programas serían: `ls -al` y `wc -l`. Necesitamos entonces, crear estos dos subprocesos.
+3. Todo lo que el subproceso1 escriba a stdout, el subproceso2 lo lea desde stdin.
+    - Conectamos el descriptor de stdout del subproceso1 al extremo de escritura del pipe.
+    - Conectamos el descriptor de stdin del subproceso2 al extremo del ectura del pipe.
+4. Ejecutamos el comando `ls -al` en el subproceso1
+5. Ejecutamos el comando `wc -l` en el subproceso2.
+6. Cerrar los descriptores no utilizados en cada subproceso (eliminamos referencias hacia descriptores y permite retornar el EOF).
