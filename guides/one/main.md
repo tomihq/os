@@ -114,9 +114,12 @@ b) Explicar qué causa cada transición y qué componentes *(scheduler, proceso,
         -> Ready (interrupción + scheduler)
 
 **Preguntar**:
-1. ¿Qué pasa en el caso de que en la PCB el proceso está BLOCKED pero un padre te tira un SIGTERM? ¿No pasaría de BLOCKED a TERMINATED? Para mí faltan flechas o este es un modelo simplificado que "asume que termina" solo si antes estaba running.
-2. ¿Para qué queremos el estado new? Para solamente "notar" que no debería estar en la PCB? Porque en realidad, en la PCB ya arrancaría en READY.
-3. ¿Qué componentes estarían involucrados en el New -> Ready? Xq desde un punto de vista sencillo, con un "fork()" un proceso crea otro proceso y listo. 
+1. ¿Qué pasa en el caso de que en la PCB el proceso está BLOCKED pero un padre te tira un SIGTERM? ¿No pasaría de BLOCKED a TERMINATED? Para mí faltan flechas o este es un modelo simplificado que "asume que termina" solo si antes estaba running. 
+    Rta: sí, es debatible. Podría ser que pase a RUNNING a la hora de desalojar, y luego a terminated. Pero podría pasar de BLOCKED a TERMINATED.
+2. ¿Para qué queremos el estado new? 
+    Rta: Significa que **el proceso está siendo creado**.
+3. ¿Qué componentes estarían involucrados en el New -> Ready? 
+    Rta: Proceso padre ejecuta fork(). El Kernel recibe la solicitud de fork(), crea el proceso, le asigna y configura su PCB. La PCB guarda la info necesaria para administrar el nuevo proceso. Una vez que el proceso está correctamente, se lo coloca en READY (para el scheduler).
 
 ## Ejercicio 5.
 a) Utilizando únicamente la llamada al sistema *fork()*, escribir un programa tal que construya un árbol de procesos que represente la siguiente genealogoía:
