@@ -236,3 +236,56 @@ Sí. Se podría asignar a cada proceso una **mayor prioridad** o un **quantum di
 Por ejemplo, un proceso más importante podría tener un quantum mayor, permitiéndole utilizar la CPU durante más tiempo sin necesidad de que aparezca varias veces en la cola.
 
 Otra alternativa sería utilizar **Round Robin con prioridades**, donde los procesos de mayor prioridad reciben la CPU antes que los de menor prioridad.
+
+## Ejercicio 6
+Considerar el siguiente conjunto de procesos:
+---------------------------------------
+| Proceso | Ráfaga de CPU | Prioridad |
+| ------- | ------------: | --------: |
+| P1      |            10 |         3 |
+| P2      |             1 |         1 |
+| P3      |             2 |         3 |
+| P4      |             1 |         4 |
+| P5      |             5 |         2 |
+---------------------------------------
+
+Se supone que los procesos llegan en el orden P1, P2, P3, P4, P5 en el instante 0.
+
+1.  Dibujar los diagramas de Gantt para ilustrar la ejecución de estos procesos usando los algoritmos de scheduling: FCFS, SJF, prioridades sin desalojo, round-robin (quantum de 1 unidad de tiempo, ordenados por el número de proceso)
+2. ¿Cuál es el waiting time promedio y de turnaround para cada algoritmo?
+3. ¿Cuál es de los algoritmos obtiene el menor waiting time promedio, y el menor turn around? 
+
+**Respuesta**
+
+a) 
+![FCFS](fcfs.png)
+![SJF](sjf.png)
+![Con Prioridades](pp.png)
+![Round Robin](rr.png)
+
+b)
+
+Preguntar. No lo entendí bien. 
+
+1) Creo que los cálculos están bien.
+2) Creo que "con prioridades" tiene dos posibles ejecuciones.
+
+3. FCFS
+   1. Waiting Time Promedio: (0+10+11+13+14)/5 = 9.6
+   2. Turn Around Promedio: (10+11+13+14+19)/5 = 13.4
+4. SJF
+   1. Waiting Time Promedio: (0+1+2+4+9)/5 = 3.2
+   2. Turn Around Promedio: (1+2+4+9+19)/5 = 7
+5. Con Prioridades (1)
+   1. Waiting Time Promedio: (0+1+6+8+18)/5 = 6.6
+   2. Turn Around Promedio: (1+6+8+18+19)/5 = 10.4  
+6. Con Prioridades (2)
+   1. Waiting Time Promedio: (0+1+6+16+18)/5 = 8.2
+   2. Turn Around Promedio: (1+6+16+18+19)/5 = 12
+7. Round Robin
+   1. Waiting Time Promedio: (10+1+5+3+9)/5 = 5.6
+   2. Turn Around Promedio: (19+2+7+4+15)/5 = 9.4
+
+c) SJF. SJF.
+
+## Ejercicio 7
