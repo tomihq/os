@@ -173,6 +173,7 @@ El proceso solo soltaría la CPU sí va a **blocked** (I/O) o **terminated** (te
 - MultiLevel Feedback Queue
 
 **Respuesta**
+
 Primero recordemos qué es **starvation** y por qué es importante saberlo.
 
 Starvation es: "nunca vas a llegar a tocar un proceso", lo cual es diferente de: "quizá tarda mucho en llegar, pero llega".
@@ -187,3 +188,51 @@ Starvation es: "nunca vas a llegar a tocar un proceso", lo cual es diferente de:
 
 **Preguntar**: ¿está bien lo de multilevel queue? porque YO entendí que si tenés una queue real-time con máxima prioridad, si te entra algún batch, pero tenés 9999999999 real-time *(1 proceso nuevo READY por segundo)* y 1 batch, el batch no lo ejecutás nunca hasta que vacías los real-time.
 Capaz SEGURO que existe una forma de decir: "ok, tomás alguno de otra queue y después seguís con la otra" pero yo interpreto que acá hasta que no vacías la máxima prioridad, no pasás a la otra.
+
+## Ejercicio 5
+Considere una modificación a *round-robin* en la que un mismo proceso puede estar encolado varias veces en la lista de procesos *ready*. Por ejemplo, en un RR normal se tendrían en la cola ready a P1, P2, P3, P4. Con esta modificación se podría tener P1, P1, P2, P1, P3, P1, P4.
+
+a) ¿Qué impacto tendría esta modificación?
+
+b) Dar ventajas y desventajas de este esquema. Piense en el efecto logrado.
+
+c) ¿Se le ocurre alguna otra modificación para mantener las ventajas sin tener que duplicar las entradas en la lista de procesos *ready*?
+
+**Respuesta**
+
+### a) ¿Qué impacto tendría esta modificación?
+
+El impacto principal es que un proceso podría aparecer varias veces en la cola `ready`, por lo que tendría **más oportunidades de obtener la CPU** que los demás procesos.
+
+Por ejemplo:
+
+```text
+RR normal:
+P1 → P2 → P3 → P4 → P1 → P2 → P3 → P4
+
+RR modificado:
+P1 → P1 → P2 → P1 → P3 → P1 → P4
+```
+
+En este caso, **P1 recibe la CPU con mucha mayor frecuencia** que los demás procesos.
+
+### b) Ventajas y desventajas
+
+**Ventajas**
+
+* Permite darle a determinados procesos **más oportunidades de utilizar la CPU**.
+* Puede utilizarse para favorecer procesos que necesitan una respuesta más rápida o que se consideran más importantes.
+
+**Desventajas**
+
+* Si un proceso aparece muchas veces consecutivas en la cola, puede tener la CPU durante mucho tiempo.
+* Si tenemos un proceso repetido **n veces** de manera continua, los demás procesos pueden quedar esperando demasiado tiempo.
+* En un caso extremo, el comportamiento podría parecerse a un **FCFS con un proceso que tiene una ráfaga de CPU extremadamente larga**, perjudicando especialmente a los procesos interactivos.
+
+### c) ¿Otra modificación sin duplicar entradas?
+
+Sí. Se podría asignar a cada proceso una **mayor prioridad** o un **quantum diferente**.
+
+Por ejemplo, un proceso más importante podría tener un quantum mayor, permitiéndole utilizar la CPU durante más tiempo sin necesidad de que aparezca varias veces en la cola.
+
+Otra alternativa sería utilizar **Round Robin con prioridades**, donde los procesos de mayor prioridad reciben la CPU antes que los de menor prioridad.
