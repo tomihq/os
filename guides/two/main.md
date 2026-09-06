@@ -71,9 +71,13 @@ Por ejemplo, si tenemos un **quantum de 4** y P2 está ejecutando:
 
 ```text
 t=0 → P2 empieza a ejecutar
+
 t=1 → P2 ejecuta
+
 t=2 → P2 ejecuta
+
 t=3 → P2 ejecuta
+
 t=4 → termina su quantum
 ```
 
@@ -81,7 +85,9 @@ En ese momento, el scheduler busca otro proceso que esté **ready**. Pero supong
 
 ```text
 P0 → BLOCKED (I/O)
+
 P1 → BLOCKED (I/O)
+
 P2 → READY
 ```
 
@@ -91,13 +97,13 @@ Podría suceder:
 
 ```text
 CPU:  P2 | P2 | P2 | P2 | P2 | P0 | P1 | ...
+
        ↑    ↑    ↑    ↑
+
        quantum = 4
 ```
 
 Cada vez que P2 termina su quantum, si P0 y P1 continúan bloqueados por I/O y P2 es el único proceso **ready**, el scheduler puede volver a darle la CPU a P2. Esto continúa hasta que P0 o P1 terminan su operación de I/O y vuelven a estar **ready**.
-
-También se puede combinar Round Robin con un sistema de prioridades. En ese caso hay que tener cuidado con el problema de **starvation**: si los procesos de mayor prioridad siempre tienen preferencia, un proceso de baja prioridad podría quedar esperando indefinidamente. Para evitarlo se puede utilizar, por ejemplo, **aging**, aumentando progresivamente la prioridad de los procesos que llevan mucho tiempo esperando.
 
 Ahora sí, planteemos qué nos convendría en este caso.
 
@@ -108,6 +114,7 @@ Ahora sí, planteemos qué nos convendría en este caso.
 * **P2 tiene ráfagas prolongadas de alto consumo de CPU y luego escritura a disco:** acá tenemos dos cosas:
 
   1. Tiene **ráfagas prolongadas de CPU**, por lo que necesita utilizar la CPU durante períodos relativamente largos.
+
   2. Luego realiza una **escritura a disco**, que es una operación de I/O, por lo que también puede quedar bloqueado mientras espera que termine.
 
 Podemos entonces considerar a **P2 como un proceso principalmente CPU-bound**, mientras que **P0 y P1 son procesos más I/O-bound**.
@@ -118,18 +125,32 @@ Sí. De hecho, **Round Robin es una opción razonable para este escenario**.
 
 P0 y P1, al tener frecuentes operaciones de I/O, suelen bloquearse. Mientras ellos están bloqueados, P2 puede aprovechar la CPU. Cuando P0 o P1 terminan su operación de I/O y vuelven a estar **ready**, Round Robin les permite obtener la CPU relativamente rápido, lo que favorece su tiempo de respuesta.
 
-P2, aunque tenga ráfagas largas de CPU, también puede avanzar. Si su quantum termina antes de que termine su ráfaga de CPU, será desalojado. Sin embargo, **si P0 y P1 están bloqueados por I/O y P2 es el único proceso ready, P2 puede volver a recibir la CPU inmediatamente**. Por lo tanto, el vencimiento del quantum no significa necesariamente que otro proceso vaya a ejecutar: tiene que existir otro proceso **ready** al cual darle la CPU.
+P2, aunque tenga ráfagas largas de CPU, también puede avanzar. Si su quantum termina antes de que termine su ráfaga de CPU, será desalojado. Sin embargo, **si P0 y P1 están bloqueados por I/O y P2 es el único proceso ready, P2 puede volver a recibir la CPU inmediatamente**.
 
 Por lo tanto, **no es necesario encontrar un quantum que coincida con las ráfagas de los tres procesos**. El quantum debe elegirse buscando un equilibrio entre un buen tiempo de respuesta y una cantidad razonable de **context switches**.
 
-### ¿Y Round Robin con prioridades?
+### ¿Y un algoritmo de prioridades?
 
-También podría ser una buena alternativa si queremos darle mayor prioridad a los procesos I/O-bound, P0 y P1, para mejorar todavía más su tiempo de respuesta.
+También podría utilizarse, pero **no parece necesario en este caso**.
 
-Sin embargo, habría que tener cuidado con el **starvation de P2**. Si P0 y P1 tienen siempre prioridad y constantemente vuelven a estar **ready**, P2 podría quedar esperando demasiado tiempo. Por eso sería conveniente utilizar algún mecanismo como **aging**, que aumente la prioridad de P2 mientras espera.
+Podríamos asignar una prioridad mayor a P0 y P1, ya que son procesos I/O-bound y pueden beneficiarse de obtener la CPU rápidamente cuando terminan sus operaciones de I/O. P2 podría tener una prioridad menor, ya que posee ráfagas prolongadas de CPU.
+
+Sin embargo, esto introduce el problema de **starvation**. Si P0 y P1 tienen siempre mayor prioridad y frecuentemente vuelven a estar **ready**, P2 podría quedar esperando durante demasiado tiempo.
+
+Para evitar esto habría que utilizar algún mecanismo adicional, como **aging**, que aumente progresivamente la prioridad de los procesos que llevan mucho tiempo esperando.
+
+Además, **Round Robin ya resuelve de manera natural el problema que tenemos en este escenario**: cuando P0 y P1 están bloqueados haciendo I/O, P2 puede aprovechar la CPU; y cuando P0 o P1 vuelven a estar **ready**, pueden obtener la CPU rápidamente gracias al reparto mediante quantums.
+
+Por lo tanto, **no necesitamos introducir prioridades para que los procesos I/O-bound tengan oportunidades de ejecutar**. Su propio comportamiento de bloqueo por I/O hace que liberen la CPU, y Round Robin se encarga de repartirla cuando vuelven a estar disponibles.
 
 ### Conclusión
 
 El algoritmo que parece más adecuado es **Round Robin**, utilizando un quantum razonable.
 
-La idea es que **cuando P0 y P1 estén bloqueados haciendo I/O, P2 pueda aprovechar la CPU para avanzar en sus largas ráfagas de CPU**. Si P2 termina su quantum mientras P0 y P1 siguen bloqueados, **P2 puede continuar ejecutando porque es el único proceso ready**. Pero cuando P0 o P1 se desbloqueen y vuelvan a estar **ready**, Round Robin les permite obtener la CPU rápidamente, favoreciendo su interactividad y tiempo de respuesta.
+La idea es que **cuando P0 y P1 estén bloqueados haciendo I/O, P2 pueda aprovechar la CPU para avanzar en sus largas ráfagas de CPU**. Si P2 termina su quantum mientras P0 y P1 siguen bloqueados, **P2 puede continuar ejecutando porque es el único proceso ready**.
+
+Cuando P0 o P1 se desbloqueen y vuelvan a estar **ready**, Round Robin les permite obtener la CPU rápidamente, favoreciendo su tiempo de respuesta.
+
+Un algoritmo de prioridades también podría funcionar, pero **no aporta una ventaja necesaria en este escenario y agrega el riesgo de starvation de P2**, que obligaría a utilizar mecanismos como aging.
+
+Por lo tanto, **Round Robin alcanza y es una alternativa simple y adecuada para estos tres procesos**.
