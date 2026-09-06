@@ -154,3 +154,8 @@ Cuando P0 o P1 se desbloqueen y vuelvan a estar **ready**, Round Robin les permi
 Un algoritmo de prioridades también podría funcionar, pero **no aporta una ventaja necesaria en este escenario y agrega el riesgo de starvation de P2**, que obligaría a utilizar mecanismos como aging.
 
 Por lo tanto, **Round Robin alcanza y es una alternativa simple y adecuada para estos tres procesos**.
+
+## Ejercicio 3
+¿A qué tipo de scheduler corresponde el siguiente diagrama de transición de estados de un proceso?
+
+**Respuesta**: a uno non-preemptive. Esto es fácil de notar porque no existe ninguna flecha de **running** a **ready** (desalojo)
