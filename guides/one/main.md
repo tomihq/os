@@ -1,7 +1,3 @@
-
-
-
-
 # Guía 1: Procesos y API del S.O.
 
 ## 1. ¿Cuáles son los pasos que deben llevarse a cabo para realizar un cambio de contexto? 
