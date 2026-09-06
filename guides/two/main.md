@@ -158,4 +158,32 @@ Por lo tanto, **Round Robin alcanza y es una alternativa simple y adecuada para 
 ## Ejercicio 3
 ¿A qué tipo de scheduler corresponde el siguiente diagrama de transición de estados de un proceso?
 
-**Respuesta**: a uno non-preemptive. Esto es fácil de notar porque no existe ninguna flecha de **running** a **ready** (desalojo)
+**Respuesta**: a uno non-preemptive. Esto es fácil de notar porque no existe ninguna flecha de **running** a **ready** (desalojo).
+El proceso solo soltaría la CPU sí va a **blocked** (I/O) o **terminated** (terminó)
+
+## Ejercicio 4
+¿Cuáles de los siguientes algoritmos de *scheduling* pueden resultar en *starvation* y en qué condiciones?
+
+- Round-robin
+- Por prioridad
+- SJF (Shortest-Job-First)
+- SRTF (Shortest-Remaining-Time-First)
+- FCFS (First-Come-First-Serve)
+- MultiLevel Queue
+- MultiLevel Feedback Queue
+
+**Respuesta**
+Primero recordemos qué es **starvation** y por qué es importante saberlo.
+
+Starvation es: "nunca vas a llegar a tocar un proceso", lo cual es diferente de: "quizá tarda mucho en llegar, pero llega".
+
+- Round-robin: no aparece. Se hace la ronda de los procesos con un quantum para cada proceso. Mientras un proceso esté READY, eventualmente tendrá su turno, por lo que no hay starvation por parte del algoritmo.
+- Por prioridad: sí, puede aparecer starvation. La condición es que haya procesos con muchísima prioridad que sigan siendo elegidos antes que los de menor prioridad. Si continúan llegando procesos de alta prioridad, los de menor prioridad pueden quedar sin ejecutarse indefinidamente.
+- SJF (Shortest-Job-First): sí, puede aparecer starvation. Si siempre entran procesos más cortos, el proceso largo puede quedar eternamente postergado. Por eso, SJF necesita conocer o estimar la duración de la próxima CPU burst para poder decidir cuál es el proceso más corto.
+- SRTF (Shortest-Remaining-Time-First): sí, puede aparecer starvation. Si continuamente llegan procesos cuyo tiempo restante es menor que el del proceso largo, este puede quedar eternamente postergado. Además, al ser preemptive, un proceso que ya está ejecutando puede ser desalojado cuando llega otro con menor tiempo restante.
+- FCFS (First-Come-First-Serve): no aparece por la política de scheduling. Como los procesos se atienden en orden de llegada, un proceso READY no puede ser continuamente salteado por procesos que llegan después. Puede tener un tiempo de espera enorme si hay un proceso muy largo adelante, pero si ese proceso eventualmente libera la CPU, el siguiente ejecutará.
+- MultiLevel Queue: sí, puede aparecer starvation. Por ejemplo, si los procesos real-time tienen mayor prioridad y continuamente hay procesos real-time listos para ejecutarse, los procesos batch pueden quedar esperando indefinidamente y no llegar a ejecutarse nunca. Además, como la prioridad es estática, los procesos no pueden cambiar de cola como ocurre en Multilevel Feedback Queue, por lo que un proceso batch no puede aumentar su prioridad mediante Aging para pasar a una cola superior.
+- MultiLevel Feedback Queue: sí, puede aparecer starvation, pero se puede reducir o evitar mediante Aging. Los procesos que permanecen mucho tiempo esperando en una cola de baja prioridad pueden aumentar progresivamente su prioridad y pasar a una cola de mayor prioridad, permitiendo que eventualmente sean ejecutados.
+
+**Preguntar**: ¿está bien lo de multilevel queue? porque YO entendí que si tenés una queue real-time con máxima prioridad, si te entra algún batch, pero tenés 9999999999 real-time *(1 proceso nuevo READY por segundo)* y 1 batch, el batch no lo ejecutás nunca hasta que vacías los real-time.
+Capaz SEGURO que existe una forma de decir: "ok, tomás alguno de otra queue y después seguís con la otra" pero yo interpreto que acá hasta que no vacías la máxima prioridad, no pasás a la otra.
