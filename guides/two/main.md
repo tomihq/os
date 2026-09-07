@@ -225,7 +225,6 @@ En este caso, **P1 recibe la CPU con mucha mayor frecuencia** que los demás pro
 
 **Desventajas**
 
-* Si un proceso aparece muchas veces consecutivas en la cola, puede tener la CPU durante mucho tiempo.
 * Si tenemos un proceso repetido **n veces** de manera continua, los demás procesos pueden quedar esperando demasiado tiempo.
 * En un caso extremo, el comportamiento podría parecerse a un **FCFS con un proceso que tiene una ráfaga de CPU extremadamente larga**, perjudicando especialmente a los procesos interactivos.
 
