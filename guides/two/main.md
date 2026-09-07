@@ -230,11 +230,9 @@ En este caso, **P1 recibe la CPU con mucha mayor frecuencia** que los demás pro
 
 ### c) ¿Otra modificación sin duplicar entradas?
 
-Sí. Se podría asignar a cada proceso una **mayor prioridad** o un **quantum diferente**.
+Sí. Se podría asignar más quantum. 
 
 Por ejemplo, un proceso más importante podría tener un quantum mayor, permitiéndole utilizar la CPU durante más tiempo sin necesidad de que aparezca varias veces en la cola.
-
-Otra alternativa sería utilizar **Round Robin con prioridades**, donde los procesos de mayor prioridad reciben la CPU antes que los de menor prioridad.
 
 ## Ejercicio 6
 Considerar el siguiente conjunto de procesos:
