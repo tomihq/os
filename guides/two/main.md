@@ -290,5 +290,56 @@ Preguntar. No lo entendí bien.
 c) SJF. SJF.
 
 ## Ejercicio 7
+El siguiente diagrama de Gantt corresponde a la ejecución tres procesos en un sistema monopro-
+cesador.
+
+![Diagrama Gantt](ej7.png)
+
+a) Calcular el waiting time y el turnaround promedios.
+
+b) Indicar de qué tipo de scheduler se trata, justificando claramente esa conclusión.
+
+Sí, te lo dejaría así, manteniendo bastante tu forma de razonar y escribir, pero haciéndolo más prolijo y preciso:
+
+---
+
+### b)
+
+* Llegan en orden: **P1, P2, P3, P4, P5**.
+
+* Cómo se ejecutan:
+
+  * **P1 se consume entero**, ya que necesita 3 ráfagas de CPU.
+
+  * **P2 ya había llegado cuando P1 estaba ejecutando**, pero P1 continúa ejecutándose. P2 necesita 6 ráfagas de CPU y, cuando empieza a ejecutarse, consume 1, por lo que le quedan **5 ráfagas**.
+
+    Hay dos posibilidades para explicar por qué P2 deja de ejecutar:
+
+    * Lo desalojan porque llega un proceso que necesita menos ráfagas de CPU.
+    * Se pone a hacer I/O.
+
+    **La segunda posibilidad no la considero porque el enunciado no menciona ninguna operación de I/O.**
+
+  * Luego **P3 se ejecuta entero**, ya que necesita 4 ráfagas de CPU.
+
+  * **P4 llega mientras P3 está ejecutando**, pero termina siendo uno de los últimos en ejecutarse. Esto es llamativo porque P4 llega antes que P5, pero P5 se ejecuta primero. P5 necesita solamente **2 ráfagas de CPU**, mientras que a P2 le quedaban **5**, por lo que parece que se prioriza al proceso al que le quedan menos ráfagas de CPU.
+
+  * Cuando P3 termina, quedan **P2, P4 y P5**. Se ejecutan en el orden **P5 → P2 → P4**. Esto tiene sentido si se prioriza al proceso que tiene menos CPU restante:
+
+    * P5: **2 ráfagas**
+    * P2: **5 ráfagas** restantes
+    * P4: **5 ráfagas**
+
+    P5 se ejecuta primero por ser el que menos CPU necesita. Luego hay un empate entre P2 y P4, y se ejecuta primero P2 porque **llegó antes que P4**.
+
+Conclusión
+* Es un **scheduler preemptive**, porque **P2 es desalojado antes de terminar** cuando aparece P3.
+
+* P2 se desaloja en **t = 4**, después de haber consumido 1 ráfaga de CPU, porque llega P3, al que le quedan solamente **4 ráfagas**, mientras que a P2 le quedan **5**.
+
+* Cuando quedan P2, P4 y P5, se ejecutan **P5 → P2 → P4**. P5 tiene menos CPU restante, mientras que P2 y P4 tienen la misma cantidad restante. En ese empate se prioriza al que **llegó primero**, por lo que P2 se ejecuta antes que P4.
+
+**El algoritmo es SRTF (Shortest Remaining Time First), porque prioriza los procesos a los que les queda menos tiempo de CPU para terminar. Además, es la versión con desalojo, ya que cuando aparece un proceso con menor tiempo restante puede desalojar al proceso que está ejecutando. De no ser preemptive, P2 habría continuado ejecutándose hasta terminar.**
+
 
 ## Ejercicio 8
