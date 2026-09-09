@@ -338,4 +338,15 @@ Conclusión
 **El algoritmo es SRTF (Shortest Remaining Time First), porque prioriza los procesos a los que les queda menos tiempo de CPU para terminar. Además, es la versión con desalojo, ya que cuando aparece un proceso con menor tiempo restante puede desalojar al proceso que está ejecutando. De no ser preemptive, P2 habría continuado ejecutándose hasta terminar.**
 
 
-## Ejercicio 8
+## Ejercicio 8, 9 y 10 son simil.
+
+## Ejercicio 11
+Considere un algoritmo de scheduling que favorece a aquellos procesos que han usado la menor
+cantidad de tiempo de procesador en el pasado reciente. Explique por qué favorecería a los procesos
+que realizan muchas E/S, pero a la vez no dejaría a los intensivos en CPU en starvation.
+
+**Respuesta**: el algoritmo favorece a los procesos que realizan mucha E/S porque estos procesos suelen alternar ráfagas cortas de CPU con períodos de E/S. Por lo tanto, cuando vuelven al estado listo, han utilizado poca CPU en el pasado reciente y **reciben una mayor prioridad que los procesos intensivos en CPU, que suelen acumular un mayor uso reciente del procesador.**
+
+A su vez, **los procesos intensivos en CPU no sufren starvation porque la prioridad depende del uso reciente de CPU y no de su uso acumulado desde que comenzó el proceso**. Si un proceso CPU-bound permanece esperando, deja de consumir CPU mientras otros procesos ejecutan. Por lo tanto, con el paso del tiempo su uso de CPU en el período reciente se vuelve relativamente menor y eventualmente será favorecido por el scheduler.
+
+Lo clave acá es el **pasado reciente**: si no tenés mucho uso de CPU en el pasado reciente, "te priorizamos" más, seas un proceso de CPU o I/O.
