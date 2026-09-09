@@ -39,7 +39,9 @@ Ráfagas de I/O:
 - [3, 11): Duración: 8 unidades de tiempo.
 - [14, 21): Duración: 7 unidades de tiempo.
 
-**Pregunta**: ¿usamos alguna medida particular, o hablamos solamente de n unidades de tiempo?
+Notar que la unidad de tiempo podría ser cualquier unidad que vos quieras. 
+
+**Importante**: generalmente, un proceso que pasa de Running a Blocked por I/O no pierde el quantum que le quedaba. Mientras está bloqueado no consume CPU, por lo que, cuando el I/O termina y vuelve a ser Ready, conserva el tiempo de quantum restante para cuando vuelva a ejecutar.
 
 ## Ejercicio 2
 
@@ -188,6 +190,8 @@ Starvation es: "nunca vas a llegar a tocar un proceso", lo cual es diferente de:
 
 **Preguntar**: ¿está bien lo de multilevel queue? porque YO entendí que si tenés una queue real-time con máxima prioridad, si te entra algún batch, pero tenés 9999999999 real-time *(1 proceso nuevo READY por segundo)* y 1 batch, el batch no lo ejecutás nunca hasta que vacías los real-time.
 Capaz SEGURO que existe una forma de decir: "ok, tomás alguno de otra queue y después seguís con la otra" pero yo interpreto que acá hasta que no vacías la máxima prioridad, no pasás a la otra.
+
+Sí. Es exactamente ese el tipo de problema que puede pasar. 
 
 ## Ejercicio 5
 Considere una modificación a *round-robin* en la que un mismo proceso puede estar encolado varias veces en la lista de procesos *ready*. Por ejemplo, en un RR normal se tendrían en la cola ready a P1, P2, P3, P4. Con esta modificación se podría tener P1, P1, P2, P1, P3, P1, P4.
