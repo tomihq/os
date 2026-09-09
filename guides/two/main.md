@@ -299,11 +299,7 @@ a) Calcular el waiting time y el turnaround promedios.
 
 b) Indicar de qué tipo de scheduler se trata, justificando claramente esa conclusión.
 
-Sí, te lo dejaría así, manteniendo bastante tu forma de razonar y escribir, pero haciéndolo más prolijo y preciso:
-
----
-
-### b)
+b)
 
 * Llegan en orden: **P1, P2, P3, P4, P5**.
 
