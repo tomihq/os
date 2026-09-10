@@ -580,3 +580,23 @@ Justificar especialmente por qué la política elegida permite cumplir con ambos
 * No perjudica excesivamente el **throughput**, siempre que se utilice un **quantum suficientemente grande** como para evitar un exceso de cambios de contexto. Los trabajos de procesamiento de datos siguen utilizando la CPU cuando la necesitan y pueden aprovechar los períodos en los que los procesos interactivos están bloqueados por E/S.
 
 Por lo tanto, **RR permite alcanzar ambos objetivos**: mejora el tiempo de respuesta de los trabajos interactivos al repartir la CPU de manera más equitativa y, con un quantum adecuado, mantiene un buen aprovechamiento de la CPU y un throughput razonable.
+
+## Ejercicio 15
+Una seriografía es una técnica para el estudio de los órganos en movimiento. Se realiza utilizando un aparato llamado seriógrafo, que ejecuta varias radiografías por segundo y muestra en una pantalla
+una serialización digital de estas imágenes, dando como resultado una especie de video.
+
+Existen seriógrafos que permiten editar algunas características de las imágenes a medida que se
+van generando, mientras se está llevando a cabo el estudio médico. 
+
+Entre otras cosas, permiten ajustar
+el brillo y el contraste de las imágenes, y hacer zoom-in y zoom-out. Así, se permite una edición “en
+vivo” del video.
+
+Se tienen entonces los siguientes procesos:
+- uno que genera las imágenes digitales a partir de los valores resultantes al irradiar al paciente
+- uno que responde a los botones de ajuste de brillo y contraste
+- uno que responde a los botones de ajuste de zoom
+
+¿Qué política de scheduling permite esta toma y edición de imágenes “en vivo” de manera eficiente?
+
+Justificar.
