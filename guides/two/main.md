@@ -543,3 +543,21 @@ WT = TAT - Tiempo de Ejecución
 
 Notar que los que tienen 0 es porque al toque que llegaron, le dimos el control y no fueron desalojados porque no llegó otro con deadline menor hasta que terminaron.
 
+## Ejercicio 13
+Explicar cómo los siguientes algoritmos favorecen (o desfavorecen) a los trabajos más cortos:
+
+- FCFS (FIFO)
+- RR
+- MultiLevel Feedback Queue
+
+**Respuesta**
+
+FCFS:
+- Favorecen: únicamente a los procesos cortos que casualmente llegan primero a la cola.
+- Desfavorecen: si tenés un proceso muy largo, y luego trabajos cortos  (y/o interactivos), tenés que esperar a que termine el muy largo para después arrancar con los trabajos más cortos (pensar el caso de uno que sea potencialmente muy largo.)
+
+RR:
+- Favorecen: al dividir el tiempo en quántums, un proceso muy corto puede completar su ejecución en sus primeros turnos sin tener que esperar a que los procesos largos terminen. 
+- Desfavorecen: tardás un poco más en terminarlos, pero sos generoso con la mayor parte de los trabajos independientemente de su duración. Tenés context-switch.
+
+**Preguntar**: MultiLevel Feedback Queue: depende muchísimo de qué algoritmos de scheduling pongas en las queues.
