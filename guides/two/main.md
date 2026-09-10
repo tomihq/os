@@ -600,3 +600,39 @@ Se tienen entonces los siguientes procesos:
 ¿Qué política de scheduling permite esta toma y edición de imágenes “en vivo” de manera eficiente?
 
 Justificar.
+
+**Respuesta:** tenemos diferentes prioridades acá.
+
+Lo principal es **generar las imágenes digitales a partir de los valores resultantes al irradiar al paciente**.
+
+¿Por qué? Porque no tiene sentido:
+
+* Darle funcionalidad a un botón de ajuste de brillo y contraste.
+* Darle funcionalidad a un botón de ajuste de zoom.
+
+si todavía no tenemos ninguna imagen digital sobre la cual realizar esas operaciones.
+
+Por lo tanto, la **prioridad 1** es generar las imágenes. Esto no quiere decir que el resto de las tareas no deban ser atendidas, pero además de permitir la interactividad con los botones, necesitamos garantizar que el sistema tenga suficiente tiempo para generar continuamente las imágenes.
+
+La **prioridad 2** es atender las solicitudes de los botones. Estas tareas están asociadas a la interacción con el usuario, por lo que necesitamos una política de scheduling que permita mantener un buen tiempo de respuesta.
+
+Ahora bien, ¿qué pasaría si tenemos pendientes una solicitud de "ajustar brillo y contraste" y otra de "ajustar zoom"?
+
+Si bien el usuario no puede realizar ambas acciones exactamente al mismo tiempo, sí puede realizar una y luego la otra. En ese caso, considero razonable que las solicitudes se procesen **en el orden en que fueron realizadas**.
+
+Por ejemplo, si el usuario primero solicita ajustar el brillo y el contraste y luego solicita ajustar el zoom, debería comenzar a procesarse primero el ajuste de brillo y contraste.
+
+Esto me lleva a otra pregunta: **¿tiene sentido que alternemos la CPU entre ajustar brillo y ajustar zoom?**
+
+Para mí, no. Si el usuario solicitó primero el ajuste de brillo y después el de zoom, no parece tener sentido que el sistema produzca un efecto en el que se va aplicando parcialmente el brillo, luego parcialmente el zoom, después nuevamente el brillo, etc. El usuario espera que primero se procese la operación que solicitó primero y, una vez finalizada, se procese la siguiente.
+
+Por este motivo, considero que las solicitudes de edición podrían procesarse utilizando **FCFS**, respetando el orden en que fueron solicitadas.
+
+Sin embargo, esto no significa que una operación de edición deba poder ejecutarse indefinidamente. Si mientras se está procesando una operación de edición llega una nueva imagen que debe ser generada, considero razonable que **la generación de imágenes pueda interrumpir la operación de edición**, dado que mantener el flujo de imágenes es fundamental para que el sistema pueda realizar la toma y edición "en vivo".
+
+Por otro lado, para la **generación de imágenes** podría tener sentido utilizar **Round Robin**, ya que continuamente pueden llegar nuevas imágenes y queremos que el procesamiento avance sobre todas ellas en lugar de que una imagen tenga que finalizar completamente antes de comenzar a procesar la siguiente. De esta manera, el procesador puede repartir su tiempo entre las distintas imágenes que deben generarse.
+
+Esto introduce una consideración: con Round Robin, una imagen que llegó después podría terminar de procesarse antes que una imagen anterior. Sin embargo, esto no necesariamente es un problema si el sistema puede mantener el orden temporal de las imágenes al momento de mostrarlas o entregarlas. Si, por el contrario, se requiere que las imágenes terminen estrictamente en el mismo orden en que fueron generadas, **FCFS sería una alternativa más natural para la generación**.
+
+## Ejercicio 16
+
