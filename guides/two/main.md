@@ -437,6 +437,41 @@ d) El algoritmo SRTF logra un menor Turnaround promedio al priorizar siempre el 
 
 Conclusión: SRTF es una política idealmente teórica que requiere conocer el tiempo futuro de ejecución de los procesos (lo cual es inviable en la práctica) y genera inequidad. Round-Robin es la alternativa estándar para sistemas multiusuario y de propósito general por su equidad y buen tiempo de respuesta.
 
+## Ejercicio 10
+Considere los siguientes procesos
+![Tabla Procesos](ej10.png)
+
+a) Realizar un diagrama de Gantt para un algoritmo de scheduling Multilevel feedback queue con dos colas: una cola 1 con quantum de 1 unidad de tiempo, y una cola 2 con FCFS. 
+
+La cola 1 tiene más prioridad que la 2. Usa política con desalojo. 
+
+Para cada proceso se indica qué cola se le asigna en el momento de su llegada.
+
+b) Calcular el tiempo de turnaround promedio y el waiting time promedio.
+
+**Respuesta**
+
+Algunas aclaraciones:
+
+- "Una cola 1 con quantum de 1 unidad de tiempo": se refiere a Round Robin con quantum de t = 1.
+- **Preguntar**: "Usa política con desalojo". ¿siempre que caiga algo en una queue de mayor prioridad se prioriza esa? Esta pregunta está porque, está en el mismo párrafo que "la cola 1 tiene más prioridad que la 2" y no creo que el "Usa política con desalojo" esté relacionado a una queue en particular.
+
+Entonces:
+
+- Queue 1: RR (quantum 1)
+- Queue 2: FCFS
+
+Para cada proceso, se dice a qué queue cae. 
+
+a) Primero, tenemos que resolver todos los de la queue 1. Como ninguno tiene que hacer I/O, sabemos que vamos a alternar entre todos ellos con q = 1. Una vez que terminamos con los de la queue 1, vamos con los de la queue 2 en el orden en que entraron (FCFS) 
+![Tabla Procesos](ej10-res.png)
+
+b) 
+
+Turnaround promedio: ((7-0) + (6-0) + (15-0) + (20-10)) / 4 = (7 + 6 + 15 + 10) / 4 =  38 / 4 = 9.5
+
+Waiting Time promedio: ((7-4) + (6-3) + (15-8) + (10-5)) / 4 = 4.5
+
 ## Ejercicio 11
 Considere un algoritmo de scheduling que favorece a aquellos procesos que han usado la menor
 cantidad de tiempo de procesador en el pasado reciente. Explique por qué favorecería a los procesos
