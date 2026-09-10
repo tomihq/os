@@ -290,12 +290,32 @@ Preguntar. No lo entendí bien.
 c) SJF. SJF.
 
 ## Ejercicio 7
-El siguiente diagrama de Gantt corresponde a la ejecución tres procesos en un sistema monopro-
-cesador.
+El siguiente diagrama de Gantt corresponde a la ejecución tres procesos en un sistema monoprocesador.
 
 ![Diagrama Gantt](ej7.png)
 
 a) Calcular el waiting time y el turnaround promedios.
+
+Turnaround: Tiempo de Finalización - Tiempo de Llegada.
+
+- P1 = 3 - 0 = 3
+- P2 = 15 - 2 = 13
+- P3 = 8 - 4 = 4
+- P4 = 20 - 6 = 14
+- P5 = 10 - 8 = 2
+
+Turnaround Promedio: (3+13+4+14+2) / 5 = 36 / 5 = 7.2
+
+Waiting Time: TA - Tiempo de Ejecución.
+
+- P1 = 3 - 3 = 0
+- P2 = 13 - 6 = 7
+- P3 = 4 - 4 = 0
+- P4 = 14 - 5 = 9
+- P5 = 2 - 2 = 0
+
+Waiting Time Promedio: 16 / 5 = 3.2
+
 
 b) Indicar de qué tipo de scheduler se trata, justificando claramente esa conclusión.
 
@@ -338,7 +358,59 @@ Conclusión
 **El algoritmo es SRTF (Shortest Remaining Time First), porque prioriza los procesos a los que les queda menos tiempo de CPU para terminar. Además, es la versión con desalojo, ya que cuando aparece un proceso con menor tiempo restante puede desalojar al proceso que está ejecutando. De no ser preemptive, P2 habría continuado ejecutándose hasta terminar.**
 
 
-## Ejercicio 8, 9 y 10 son simil.
+## Ejercicio 8
+Para los procesos presentados en la siguiente tabla, realizar un gŕafico de Gantt para cada uno de los algoritmos de scheduling indicados:
+- FCFS
+- RR (quantum = 10)
+- SJF
+
+![Diagrama Gantt](ej8.png)
+
+Luego, calcular el Turnaround y Waiting Time promedio
+
+**Respuesta**
+
+![Diagrama Gantt](ej8-res.png)
+
+Los 3 quedan exactamente igual.
+
+- FCFS es non-preemptive. Agarrás a medida que llegan y terminás.
+- RR es preemptive pero da la casualidad que ninguno tiene más de 10 ráfagas. Entonces el que agarra, lo ejecuta entero.
+- SJF es non-preemptive. Agarrás a medida que llegan y terminás. Si P3 hubiese llegado con P2, agarrarías P3 y después P2.
+
+Este ejercicio no sé si está mal planteado o era la idea (?.
+
+Turnaround Promedio: 
+
+- P1: 6 - 5 = 1
+- P2: 16 - 6 = 10
+- P3: 17 - 7 = 10
+- P4: 27 - 8 = 19
+
+40 / 4 = 10.
+
+Waiting Time Promedio:
+
+- P1: 1 - 1 = 0
+- P2: 10 - 10 = 0.
+- P3: 10 - 1 = 9.
+- P4: 19 - 10 = 9.
+
+18 / 4 = 4.5
+
+## Ejercicio 9
+Considere los siguientes procesos
+
+![Tabla Procesos](ej9.png)
+
+a) Realizar un diagrama de Gantt para un algoritmo de scheduling round-robin con un quantum de 5 unidades de tiempo.
+
+b) Realizar un diagrama de Gantt para un algoritmo tipo shortest remaining time first.
+
+c) Calcular el tiempo de turnaround promedio en ambos casos.
+
+d) A pesar de que uno de los dos casos tiene un tiempo de turnaround promedio mucho menor, explicar por qué en algunos contextos podría tener sentido utilizar la otra política. Para esto
+considere distintos tipos de procesos: real time, interactivos, batch, etc.
 
 ## Ejercicio 11
 Considere un algoritmo de scheduling que favorece a aquellos procesos que han usado la menor
@@ -350,3 +422,64 @@ que realizan muchas E/S, pero a la vez no dejaría a los intensivos en CPU en st
 A su vez, los procesos intensivos en CPU no sufren starvation porque la prioridad depende del uso reciente de CPU y no de su uso acumulado desde que comenzó el proceso. Si un proceso CPU-bound permanece esperando, deja de consumir CPU mientras otros procesos ejecutan. Por lo tanto, con el paso del tiempo, los demás procesos acumulan uso reciente de CPU mientras él no lo hace, haciendo que eventualmente también sea favorecido por el scheduler.
 
 Lo clave acá es el pasado reciente: si no tenés mucho uso de CPU en el pasado reciente, se te prioriza más, seas un proceso CPU-bound o I/O-bound. Esto genera un efecto de aging, que evita que los procesos CPU-bound queden indefinidamente postergados.
+
+## Ejercicio 12
+Considere los siguientes procesos:
+![Diagrama Gantt](ej12.png)
+
+a) Para los procesos presentados en la siguiente tabla, realizar un gráfico de Gantt usando el algoritmo de EDF (Earliest Deadline First).
+
+b) Calcular Turnaround promedio.
+
+c) Calcular waiting time promedio
+
+**Respuesta**
+
+Antes de empezar recordemos qué tipo de algoritmo es EDF. 
+
+EDF es un algoritmo preemptive de scheduling en tiempo real donde se prioriza ejecutar la tarea con el deadline más próximo. Cada vez que entra una nueva tarea se hace esa consulta: "la tarea que entró tiene un deadline más próximo que la actual? si la respuesta es: "sí", entonces switchea".
+
+a) Voy a primero comentar como va sucediendo todo, y luego hago el diagrama de Gantt.
+
+* **t = 0:** Llegan $P_1$ ($t.e = 3, d = 16$) y $P_3$ ($t.e = 6, d = 8$). Como $d(P_3) < d(P_1)$, ejecuta **$P_3$**.
+* **t = 1:** Ejecuta $P_3$ (1 u.t.). Estado: $P_3$ ($t.e = 5, d = 8$), $P_1$ ($t.e = 3, d = 16$). Continúa **$P_3$**.
+* **t = 2:** Ejecuta $P_3$ (1 u.t.). Llega $P_2$ ($t.e = 1, d = 7$). Como $d(P_2) < d(P_3)$, $P_2$ desaloja a $P_3$. Estado: $P_2$ ($t.e = 1, d = 7$), $P_3$ ($t.e = 4, d = 8$), $P_1$ ($t.e = 3, d = 16$). Ejecuta **$P_2$**.
+* **t = 3:** Ejecuta $P_2$ (1 u.t.) y **termina**. Se retoma $P_3$ por tener menor deadline que $P_1$. Estado: $P_3$ ($t.e = 4, d = 8$), $P_1$ ($t.e = 3, d = 16$). Ejecuta **$P_3$**.
+* **t = 4:** Ejecuta $P_3$ (1 u.t.). Estado: $P_3$ ($t.e = 3, d = 8$), $P_1$ ($t.e = 3, d = 16$). Continúa **$P_3$**.
+* **t = 5:** Ejecuta $P_3$ (1 u.t.). Estado: $P_3$ ($t.e = 2, d = 8$), $P_1$ ($t.e = 3, d = 16$). Continúa **$P_3$**.
+* **t = 6:** Ejecuta $P_3$ (1 u.t.). Estado: $P_3$ ($t.e = 1, d = 8$), $P_1$ ($t.e = 3, d = 16$). Continúa **$P_3$**.
+* **t = 7:** Ejecuta $P_3$ (1 u.t.) y **termina**. Comienza a ejecutar $P_1$. Estado: $P_1$ ($t.e = 3, d = 16$). Ejecuta **$P_1$**.
+* **t = 8:** Ejecuta $P_1$ (1 u.t.). Llega $P_4$ ($t.e = 2, d = 11$). Como $d(P_4) < d(P_1)$, $P_4$ desaloja a $P_1$. Estado: $P_4$ ($t.e = 2, d = 11$), $P_1$ ($t.e = 2, d = 16$). Ejecuta **$P_4$**.
+* **t = 9:** Ejecuta $P_4$ (1 u.t.). Estado: $P_4$ ($t.e = 1, d = 11$), $P_1$ ($t.e = 2, d = 16$). Continúa **$P_4$**.
+* **t = 10:** Ejecuta $P_4$ (1 u.t.) y **termina**. Se retoma $P_1$. Estado: $P_1$ ($t.e = 2, d = 16$). Ejecuta **$P_1$**.
+* **t = 11:** Ejecuta $P_1$ (1 u.t.). Estado: $P_1$ ($t.e = 1, d = 16$). Continúa **$P_1$**.
+* **t = 12:** Ejecuta $P_1$ (1 u.t.) y **termina**. La CPU entra en estado **IDLE**.
+* **t = 13:** Fin de período IDLE. Llega $P_5$ ($t.e = 3, d = 18$) y comienza a ejecutar.
+
+b) Turnaround promedio: es la suma de los TAT de todos los procesos dividido por la cantidad total de procesos.
+
+TAT = Tiempo de Finalización - Tiempo de Llegada
+
+- P1 = 12 - 0 = 12
+- P2 = 3 - 2 = 1
+- P3 = 7 - 0 = 7
+- P4 = 10 - 8 = 2
+- P5 = 16 - 13 = 3
+
+
+**Turnaround promedio** = (12 + 1 + 7 + 2 + 3) / 5 = 25 / 5 = 5 unidades de tiempo
+
+c) Waiting Time promedio: es el tiempo total que un proceso pasa en la cola de listos esperando usar la CPU.
+
+WT = TAT - Tiempo de Ejecución
+
+- P1 = 12 - 3 = 9
+- P2 = 1 - 1 = 0
+- P3 = 7 - 6 = 1 
+- P4 = 2 - 2 = 0 
+- P5 = 3 - 3 = 0
+
+**Waiting Time promedio** = 10 / 5 = 2 unidades de tiempo
+
+Notar que los que tienen 0 es porque al toque que llegaron, le dimos el control y no fueron desalojados porque no llegó otro con deadline menor hasta que terminaron.
+
