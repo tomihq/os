@@ -412,6 +412,31 @@ c) Calcular el tiempo de turnaround promedio en ambos casos.
 d) A pesar de que uno de los dos casos tiene un tiempo de turnaround promedio mucho menor, explicar por qué en algunos contextos podría tener sentido utilizar la otra política. Para esto
 considere distintos tipos de procesos: real time, interactivos, batch, etc.
 
+**Respuesta**
+
+a) b) 
+![Diagrama Gantt](ej9res.png)
+
+c) Lo hago en orden en el que estan los procesos en la tabla (P1, P2, P3, P4), no con respecto al dibujo.
+
+Round-Robin:
+- Turnaround Promedio: ((13-0) + (16-5) + (27 - 14) + (26 - 15)) / 4 = 48 / 4 = 12
+- Waiting Time Promedio ((13-8) + (11-8) + (13-6) + (11-5)) / 4 = 21 / 4 = 5.25
+
+SRTF:
+- Turnaround Promedio: ((8-0) + (16-5) + (27 - 14) + (21-15)) / 4 = 38 / 4 = 9.5
+- Waiting Time Promedio: ((8-8) + (11-8) + (13-6) + (6-5)) / 4 = 11 / 4 = 2.75
+
+d) El algoritmo SRTF logra un menor Turnaround promedio al priorizar siempre el trabajo más corto. Sin embargo, hay algunas contras a este
+
+- Procesos Interactivos: Requieren tiempos de respuesta bajos e inmediatos (atender eventos de interfaz, entrada de usuario, etc.). SRTF no garantiza un tiempo de respuesta equitativo; si se ejecuta un proceso largo, los demás deben esperar a que este termine o reduzca su tiempo restante. Round-Robin intercala la CPU entre todos los procesos activos de forma equitativa mediante el quantum, garantizando que ningun proceso interactivo sufra latencias perceptibles para el usuario.
+
+- Procesos Batch (por lotes): Son tareas largas que no requieren interacción directa. Si se utiliza SRTF en un entorno con un flujo continuo de procesos interactivos cortos, el proceso Batch sufrirá de inanición (starvation), quedando postergado indefinidamente. Round-Robin evita este problema asegurando que, tarde o temprano, todo proceso reciba tiempo de CPU.
+
+- Procesos en Tiempo Real (Real-Time): Ninguna de estas dos políticas es óptima para este contexto. Los sistemas de tiempo real no buscan priorizar el tiempo de retorno ni la equidad, sino el cumplimiento estricto de límites de tiempo (deadlines). Por ello, se utilizan algoritmos especializados como EDF (Earliest Deadline First) o RMS (Rate Monotonic Scheduling), donde ignorar un deadline puede ser crítico para el sistema.
+
+Conclusión: SRTF es una política idealmente teórica que requiere conocer el tiempo futuro de ejecución de los procesos (lo cual es inviable en la práctica) y genera inequidad. Round-Robin es la alternativa estándar para sistemas multiusuario y de propósito general por su equidad y buen tiempo de respuesta.
+
 ## Ejercicio 11
 Considere un algoritmo de scheduling que favorece a aquellos procesos que han usado la menor
 cantidad de tiempo de procesador en el pasado reciente. Explique por qué favorecería a los procesos
