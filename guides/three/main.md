@@ -339,3 +339,96 @@ Supongamos que P1 y P2 quedan esperando el semáforo. Luego siguen llegando nuev
 Si al liberar el semáforo siempre se atiende al proceso que está en el tope de la pila (LIFO), se atenderá primero a los procesos que llegaron más recientemente. Si continúan llegando nuevos procesos, P1 y P2 pueden quedar permanentemente debajo de ellos y nunca ser seleccionados para continuar.
 
 Por lo tanto, el uso de una pila puede producir starvation. Una cola FIFO evita este problema al garantizar que los procesos sean atendidos en el orden en que llegaron.
+
+Conclusión: priorizar siempre al último que llegó no es buena idea si no se considera el caso de que siempre podrían llegar más y más.
+
+## Ejercicio 4
+Demostrar que en caso de que las operaciones de semáforos `wait()` y `signal()` no se ejecuten atómicamente, entonces se viola la propidad de exclusión mutua *(un recurso no puede estar asignado a más de un proceso por vez)*
+
+## Ejercicio 5
+Se tienen *n* procesos: P1, P2, ..., Pn que ejecutan el siguiente código. 
+
+Se espera que todos los procesos terminen de ejecutar la función `preparado()` antes de que alguno de ellos llame a la función `critica()`. ¿Por qué la siguiente solución permite `starvation`? Modificar el código para arreglarlo.
+
+```text
+    preparado()
+
+    mutex.wait()
+    count = count+1
+    mutex.signal()
+
+    if(count == n){
+        barrera.signal()
+    }
+
+    barrera.wait()
+
+    critica()
+```
+
+**Respuesta:** Sí, puede suceder. Veamos por qué.
+
+Recordemos que `wait()` puede interpretarse como **pedir un permiso** y `signal()` como **otorgar un permiso**.
+
+Analicemos el programa original.
+
+Primero, ¿tenemos un problema de *race condition* con `count`? **No.** El acceso a `count` está protegido correctamente por `mutex`: cada proceso hace `mutex.wait()`, modifica `count` y luego libera el mutex mediante `mutex.signal()`.
+
+Por lo tanto, todos los procesos P1, P2, ..., Pn llegan eventualmente hasta el `mutex.signal()`.
+
+Ahora bien, ¿qué ocurre con P1, P2, ..., Pn-1? Como todavía no se alcanzó `count == n`, ninguno ejecuta el `if`. Por lo tanto, todos continúan hasta:
+
+```c
+barrera.wait();
+```
+
+y quedan bloqueados esperando atravesar la barrera.
+
+Finalmente llega Pn. En este momento `count == n`, por lo que Pn entra al `if` y ejecuta:
+
+```c
+barrera.signal();
+```
+
+Ese único `signal()` permite que **uno solo** de los procesos que estaban esperando en `barrera.wait()` continúe.
+
+Supongamos que se desbloquea P1. Entonces P1 continúa con:
+
+```c
+critica();
+```
+
+Mientras tanto, P2, ..., Pn-1 siguen bloqueados en `barrera.wait()`.
+
+¿Y qué ocurre con Pn? Pn continúa su flujo normal y también llega a:
+
+```c
+barrera.wait();
+```
+
+Pero el único permiso producido por el `signal()` ya fue consumido por P1. Por lo tanto, Pn también queda bloqueado.
+
+En consecuencia, **P2, ..., Pn también quedan bloqueados indefinidamente**.
+
+El problema, entonces, es que el último proceso realiza solamente **un `signal()`**, cuando hay `n` procesos que deben poder atravesar la barrera.
+
+Por lo tanto, la implementación original de la barrera es incorrecta: **solo permite que un proceso continúe, mientras que los demás quedan bloqueados.**
+
+La solución sería emitir `barrera.signal()` **n** veces.
+```text
+ preparado()
+
+    mutex.wait()
+    count = count+1
+    mutex.signal()
+
+    if(count == n){
+        for(int i = 0; i<n; i++){
+            barrera.signal();
+        }
+    }
+
+    barrera.wait()
+
+    critica()
+```
