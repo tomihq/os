@@ -432,3 +432,10 @@ La solución sería emitir `barrera.signal()` **n** veces.
 
     critica()
 ```
+
+## Ejercicio 6
+Cambiar la solución del ejercicio anterior por una solución basada solamente en las herramientas atómicas vistas en las clases, que se implementen a nivel de hardware, y responder las siguientes preguntas:
+
+- ¿Cuál de las dos soluciones genera un código más legible?
+- ¿Cuál de ellas es más eficiente? ¿Por qué?
+- ¿Qué soporte require cada una de ellas del SO y del HW?
