@@ -281,3 +281,32 @@ En esta ejecución, hasta ese momento, la salida sería:
 ```
 
 Conclusión: ¡cuidado con el uso de recursos compartidos!
+
+## Ejercicio 2
+Se tiene un sistema con 4 procesos accediendo a una variable compartida *x* y un *mutex*. Los 4 procesos ejecutan el siguiente código. 
+
+Ciertas decisiones que toma cada proceso dependen del valor de la variable compartida.
+
+Se debe asegurar que cada vez que un proceso lee la variable compartida, previamente solicita el *mutex* y luego lo libera.
+
+¿Estos procesos cumplen con lo planteado? ¿Pueden ser víctimas de *race condition*?
+
+```text
+    x = 0; //variable compartida
+    mutex(1); // mutex compartido
+
+    while(1) {
+        mutex.wait();
+        y = x; //lectura de x
+        mutex.signal();
+        if(y <= 5){
+            x++;
+        }else{
+            x--; 
+        }
+    }
+```
+
+**Respuesta**: No, no cumplen con lo planteado. Cuando solicitan el mutex, deberían ingresar a la sección crítica y realizar allí toda la operación sobre x: leerla, decidir si incrementarla o decrementarla y modificarla. Recién después deberían liberar el mutex mediante signal().
+
+El problema en este código es que se libera el mutex inmediatamente después de leer x, pero x se modifica posteriormente, cuando el proceso ya salió de la sección crítica. Por lo tanto, otro proceso puede acceder a x entre la lectura y la modificación, generando una condición de carrera.
