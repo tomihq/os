@@ -307,6 +307,35 @@ Se debe asegurar que cada vez que un proceso lee la variable compartida, previam
     }
 ```
 
-**Respuesta**: No, no cumplen con lo planteado. Cuando solicitan el mutex, deberían ingresar a la sección crítica y realizar allí toda la operación sobre x: leerla, decidir si incrementarla o decrementarla y modificarla. Recién después deberían liberar el mutex mediante signal().
+**Respuesta**: No, no cumplen con lo planteado. Cuando solicitan el mutex, deberían ingresar a la sección crítica y realizar ahí toda la operación sobre x: leerla, decidir si incrementarla o decrementarla y modificarla. Recién después deberían liberar el mutex mediante signal().
 
-El problema en este código es que se libera el mutex inmediatamente después de leer x, pero x se modifica posteriormente, cuando el proceso ya salió de la sección crítica. Por lo tanto, otro proceso puede acceder a x entre la lectura y la modificación, generando una condición de carrera.
+El problema en este código es que se libera el mutex inmediatamente después de leer x, pero x se modifica posteriormente, cuando el proceso ya salió de la sección crítica. 
+
+Por lo tanto, otro proceso puede acceder a x entre la lectura y la modificación, generando una condición de carrera.
+
+El código debería ser algo así
+```text
+    x = 0; //variable compartida
+    mutex(1); // mutex compartido
+
+    while(1) {
+        mutex.wait();
+        y = x; //lectura de x
+        if(y <= 5){
+            x++;
+        }else{
+            x--; 
+        }
+        mutex.signal();
+    }
+```
+
+## Ejercicio 3
+La operación `wait` sobre semáforos suele utilizar una cola para almacenar los pedidos que se encuentran en espera. Si en lugar de una cola utilizara una pila (LIFO), determinar si habría `starvation` o funcionará correctamente.
+
+**Respuesta**: Sí, podría haber starvation.
+Supongamos que P1 y P2 quedan esperando el semáforo. Luego siguen llegando nuevos procesos P3, P4, ..., que también ejecutan wait y se apilan.
+
+Si al liberar el semáforo siempre se atiende al proceso que está en el tope de la pila (LIFO), se atenderá primero a los procesos que llegaron más recientemente. Si continúan llegando nuevos procesos, P1 y P2 pueden quedar permanentemente debajo de ellos y nunca ser seleccionados para continuar.
+
+Por lo tanto, el uso de una pila puede producir starvation. Una cola FIFO evita este problema al garantizar que los procesos sean atendidos en el orden en que llegaron.
