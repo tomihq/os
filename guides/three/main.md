@@ -49,9 +49,31 @@ El Programa 1 tiene dos procesos que se ejecutan concurrentemente. Eso quiere de
 
 Tanto el proceso A y B utilizan una variable compartida x. Eso quiere decir que el recurso el cual comparten aquí es esa misma variable. El problema aparece porque ambos procesos realizan una operación de lectura-modificación-escritura sobre la misma variable compartida.
 
-La operación que hacen ambos, no es atómica. Como x = x + 1 no es atómica, el proceso puede ser desalojado entre la lectura y la escritura de x, permitiendo que el otro proceso ejecute sobre la misma variable.
+La operación que hacen ambos, no es atómica. Como x = x + 1 no es atómica, conceptualmente podemos pensarla como varias operaciones:
 
-Como estamos en memoria compartida, podemos asumir que **cualquier operación que utiliza x, va a ir a buscar el valor EN EL MOMENTO a la memoria**.
+1. READ:  obtener el valor actual de x
+2. ADD:   sumarle 1 al valor obtenido
+3. WRITE: guardar el nuevo valor en x
+
+Por lo tanto, el proceso puede ser desalojado entre estas operaciones, permitiendo que el otro proceso ejecute sobre la misma variable.
+
+Como estamos en memoria compartida, cuando un proceso hace una nueva operación de lectura sobre x, obtiene el valor que x tiene en ese momento. Sin embargo, hay que distinguir esto de una operación x = x + 1 que ya comenzó: si el proceso ya hizo el READ y es interrumpido, cuando luego continúe no vuelve a leer x para completar esa misma operación, sino que continúa utilizando el valor que había obtenido en el READ anterior para realizar el ADD y finalmente el WRITE.
+
+Por ejemplo, si inicialmente:
+```
+x = 0
+```
+y A ejecuta:
+```
+READ x → obtiene 0
+```
+pero es interrumpido antes del WRITE, A conserva ese valor 0 como parte de la operación que estaba realizando. Si mientras tanto B modifica x, cuando A vuelva a ejecutarse no vuelve a obtener automáticamente el nuevo valor de x: continúa su operación a partir del 0 que ya había leído.
+
+En cambio, si A posteriormente ejecuta:
+```
+printf("%d", x);
+```
+esto es una nueva lectura de x, por lo que obtiene el valor que x tenga en ese momento.
 
 Veamos algunas posibles ejecuciones.
 
