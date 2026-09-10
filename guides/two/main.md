@@ -561,3 +561,22 @@ RR:
 - Desfavorecen: tardás un poco más en terminarlos, pero sos generoso con la mayor parte de los trabajos independientemente de su duración. Tenés context-switch.
 
 **Preguntar**: MultiLevel Feedback Queue: depende muchísimo de qué algoritmos de scheduling pongas en las queues.
+
+## Ejercicio 14
+Se tiene un sistema donde hay trabajos interactivos y de procesamiento de datos. Los de procesamiento de datos leen archivos inmensos, hacen pequeñas cuentas y los vuelven a grabar.
+
+Se desea que los usuarios interactivos tengan la sensación de buen tiempo de respuesta, pero sin perjudicar excesivamente el throughput del sistema.
+
+El scheduler puede funcionar con round-robin o con FCFS. ¿Qué política utilizaría y por qué?
+
+Justificar especialmente por qué la política elegida permite cumplir con ambos objetivos del sistema.
+
+**Respuesta:** elegiría **Round-Robin (RR)** 100%, usando un quantum adecuado.
+
+* Los trabajos de procesamiento de datos realizan grandes cantidades de **E/S**, intercaladas con pequeñas ráfagas de CPU. Con **FCFS**, un proceso que comienza a ejecutarse, conserva la CPU hasta que termine el trabajo que está haciendo. **Round-Robin permite repartir la CPU entre los procesos listos**. Además, cuando un trabajo de procesamiento de datos queda bloqueado esperando E/S, la CPU puede ser utilizada por otro proceso.
+
+* Favorece a los **procesos interactivos**, ya que no tienen que esperar a que termine un trabajo completo de procesamiento de datos para obtener CPU. De esta forma, pueden recibir atención rápidamente y se consigue un **buen tiempo de respuesta**.
+
+* No perjudica excesivamente el **throughput**, siempre que se utilice un **quantum suficientemente grande** como para evitar un exceso de cambios de contexto. Los trabajos de procesamiento de datos siguen utilizando la CPU cuando la necesitan y pueden aprovechar los períodos en los que los procesos interactivos están bloqueados por E/S.
+
+Por lo tanto, **RR permite alcanzar ambos objetivos**: mejora el tiempo de respuesta de los trabajos interactivos al repartir la CPU de manera más equitativa y, con un quantum adecuado, mantiene un buen aprovechamiento de la CPU y un throughput razonable.
