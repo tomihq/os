@@ -479,3 +479,50 @@ Por eso no necesitás que el proceso se quede consumiendo CPU mientras espera.
 Internamente, el SO puede apoyarse en operaciones atómicas de hardware, pero eso queda debajo de la abstracción del semáforo.
 
 ## Ejercicio 7
+Se tienen N procesos, P0 , P1 , ..., PN −1 (donde N es un parámetro). Se requiere sincronizarlos de
+manera que la secuencia de ejecución sea Pi , Pi+1 , ..., PN −1 , P0 , ..., Pi−1 (donde i es otro parámetro).
+
+Escribir el código que deben ejecutar cada uno de los procesos para cumplir con la sincronización requerida utilizando semáforos (no olvidar los valores iniciales).
+
+**Respuesta**: necesitamos que todos arranquen bloqueados excepto el proceso Pi. Vamos a optar por una solución en la cual los procesos se conocen entre sí, es decir, cada proceso va a despertar al siguiente.
+
+¿Qué significa que uno va a despertar a otro? Que, cuando termina de ejecutar, cada proceso hace `signal()` sobre el semáforo correspondiente al siguiente proceso, dándole el permiso para ejecutar.
+
+Cada hijo va a hacer `wait()` sobre su propio semáforo.
+
+De esta manera, no tenemos problemas con el orden en que el scheduler ejecuta los procesos: aunque cualquier proceso pueda recibir CPU primero, solo el proceso cuyo semáforo fue habilitado puede continuar. El turno queda representado por los semáforos.
+
+Pseudocódigo:
+```c
+// ==========================
+// PROCESO PADRE
+// ==========================
+
+Semáforo sem[0..N-1]
+
+// Inicializa los semáforos
+para j = 0 hasta N-1:
+    si j == i:
+        sem[j] = 1
+    sino:
+        sem[j] = 0
+
+// Crea los N procesos hijos
+para j = 0 hasta N-1:
+    crear_proceso(Pj)
+
+
+// ==========================
+// CADA PROCESO HIJO Pj
+// ==========================
+
+Proceso Pj:
+
+    wait(sem[j])
+
+    ejecutar()
+
+    signal(sem[(j + 1) % N])
+```
+
+Notar que cada proceso hijo *(thread)* comparten el mismo espacio de memoria, por lo que pueden mutar la misma variable *sem*.
