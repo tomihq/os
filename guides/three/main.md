@@ -439,3 +439,27 @@ Cambiar la solución del ejercicio anterior por una solución basada solamente e
 - ¿Cuál de las dos soluciones genera un código más legible?
 - ¿Cuál de ellas es más eficiente? ¿Por qué?
 - ¿Qué soporte require cada una de ellas del SO y del HW?
+
+**Respuesta**: las herramientas atómicas vistas en las clases a través de HW son implementaciones del TAS.
+
+¿Qué es el *TAS*? TestAndSet y básicamente significa: "fijate si alguien tiene el recurso, y si no lo tiene, apropiátelo". Es una operación atómica.
+
+Hay varias implementaciones modernas tales como:
+
+- SpinLock (TASLock)
+- TTASLock
+
+¿Cuál es la desventaja de TAS con respecto a Semáforos? que hacen busy waiting.
+
+SpinLock constantemente está preguntando: "¿puedo tener el acceso?" mientras que TTASLock tiene una estrategia un poco más inteligente aprovechando el caché, pero también tiene busy waiting.
+
+¿Cuál es más legible? la solución con semáforos es más legible, porque las operaciones `wait()` y `signal()` expresan directamente la intención de bloquear y liberar el acceso a la sección crítica. La solución con TAS requiere entender la primitiva atómica y el busy waiting.
+
+¿Cuál es más eficiente? la de semáforos. Lo comentamos anteriormente. En los semáforos, utilizamos `wait()` para básicamente para irnos a dormir hasta que nos levantan con `signal()` y volver a consumir CPU.
+No obstante, si la sección crítica es extremadamente corta, un spinlock puede ser más eficiente al evitar el costo de bloquear y despertar un proceso.
+
+¿Qué soporte requiere del SO y del Hardware cada una de ellas?
+
+La solución basada en TAS requiere una primitiva atómica proporcionada por el hardware, como TestAndSet, que permita leer y modificar el valor del lock de manera indivisible. La espera se realiza mediante busy waiting, por lo que no requiere que el SO bloquee al proceso que está esperando.
+
+La solución basada en semáforos requiere soporte del sistema operativo para bloquear y despertar procesos y administrar los procesos que esperan el recurso. Internamente, el SO puede utilizar primitivas atómicas de hardware para implementar correctamente las operaciones sobre el estado del semáforo.
