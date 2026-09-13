@@ -463,3 +463,19 @@ No obstante, si la sección crítica es extremadamente corta, un spinlock puede 
 La solución basada en TAS requiere una primitiva atómica proporcionada por el hardware, como TestAndSet, que permita leer y modificar el valor del lock de manera indivisible. La espera se realiza mediante busy waiting, por lo que no requiere que el SO bloquee al proceso que está esperando.
 
 La solución basada en semáforos requiere soporte del sistema operativo para bloquear y despertar procesos y administrar los procesos que esperan el recurso. Internamente, el SO puede utilizar primitivas atómicas de hardware para implementar correctamente las operaciones sobre el estado del semáforo.
+
+TAS → Hardware
+
+Es una operación atómica provista por el hardware.
+El HW garantiza que el test + set sea indivisible.
+A partir de TAS podés construir mecanismos como Spinlocks.
+El Spinlock típico hace busy waiting.
+
+Semáforos → Sistema Operativo
+
+wait() / signal() son mecanismos de sincronización gestionados por el SO.
+El SO puede bloquear y despertar procesos.
+Por eso no necesitás que el proceso se quede consumiendo CPU mientras espera.
+Internamente, el SO puede apoyarse en operaciones atómicas de hardware, pero eso queda debajo de la abstracción del semáforo.
+
+## Ejercicio 7
