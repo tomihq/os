@@ -594,8 +594,11 @@ A partir de ahí, cada proceso le va dando el permiso al siguiente: `Pi → Pi+1
      ```text
         semáforo(recursos) = 0
         semáforo(consumidos) = 0
-        semáforo(consumidores[2]) = [1, 0] //arranca B
-        mutex(ejecucionesRestantesB) = 2; 
+
+        //esto es un inicializador. es un pseudocodigo
+        semáforo consumidores[2];
+        consumidores[0] = 1;
+        consumidores[1] = 0; 
 
         Productor A
             mientras verdadero:
@@ -608,27 +611,25 @@ A partir de ahí, cada proceso le va dando el permiso al siguiente: `Pi → Pi+1
                 para i = 1 hasta 2:
                     consumidos.wait()
 
-        Productor B
+        Consumidor B
+            ejecucionesRestantesB = 2; 
             mientras verdadero:
                 consumidores[0].wait() 
-                
-                ejecucionesRestantesB.wait();
                 
                 if(ejecucionesRestantesB != 0){
                     recursos.wait()
                     consumir 1 recurso
+                    ejecucionesRestantesB--;
                 }else{
                     ejecucionesRestantesB = 2;
                     consumidores[1].signal();
                 }
 
-                ejecucionesRestantes.signal();
-
                 //Le avisamos a A que consumimos los recursos
                 consumidos.signal()
 
 
-        Productor C
+        Consumidor C
             mientras verdadero:
                 consumidores[1].wait()
                 
