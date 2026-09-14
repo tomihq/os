@@ -792,3 +792,107 @@ Por eso
 **`dup2()` es especialmente útil cuando ejecutamos un programa cuyo código no controlamos y queremos redirigir sus descriptores estándar (`stdin`, `stdout`, `stderr`).**
 
 **Si nosotros controlamos el código que hace `read()`/`write()`, podemos utilizar directamente los descriptores y no necesitamos `dup2()`.**
+
+## Ejercicio 17
+Se cuenta con una operación computacional costosa que se desea repartir entre `N` subprocesos.
+Para ello, el proceso padre dispone de una función `int dameNumero(int pid)` que dado el `PID` de
+un hijo le devolverá un número secreto. Este número secreto deberá ser enviado al hijo correspondiente
+utilizando pipes. 
+
+Esta función solo puede ser llamada por el padre.
+Cada subproceso deberá encargarse de realizar el cómputo del número correspondiente utilizando
+para ello la función `int calcular(int numero)`. 
+
+El número que deben utilizar como parámetro es el
+resultado de la función `dameNumero` que el padre les envió.
+Los subprocesos ejecutarán la función calcular y, a medida que vayan terminando, le informarán
+el resultado al padre.
+
+El proceso padre deberá llamar a la función `void informarResultado(int numero, int resultado)`, la cual recibirá como parámetros el número sobre el que se ejecutó el cálculo, y el resultado que éste
+produjo. Esta función solamente podrá ser llamada desde el proceso padre.
+La función `informarResultado` deberá ser llamada en el mismo orden en que los procesos fueron
+terminando los distintos cómputos.
+
+```c
+void ejecutarHijo (int i, int pipes[][2]) {
+// ...
+}
+int main(int argc, char* argv[]){
+    if (argc< 2) {
+        printf ("Debe ejecutar con la cantidad de hijos como parametro\n");
+        return 0; 
+    }
+    int N = atoi(argv[1]);
+    int pipes[N*2][2];
+
+    for ( int i=0; i< N*2; i++){
+        pipe(pipes[i]); 
+    }
+
+    for (int i=0; i< N; i++) {
+        int pid = fork () ;
+        if (pid==0) {
+            ejecutarHijo(i,pipes);
+            return 0;
+        } else {
+            int numero = dameNumero(pid) ;
+            write(pipes[i][1], &numero, sizeof(numero)); 
+        } 
+    }
+
+        int cantidadTerminados = 0;
+        char hijoTermino [N] = {0};
+
+    while (cantidadTerminados < N) {
+        for ( int i=0; i< N; i++) {
+            if (hijoTermino[i]) {
+            continue; 
+            }
+            char termino = 0;
+            write(pipes[i][1], &termino, sizeof(termino));
+            read(pipes[N+i][0], &termino, sizeof(termino));
+            if (termino) {
+                int numero;
+                int resultado ;
+                read(pipes[N+i][0], &numero, sizeof(numero));
+                read(pipes[N+i][0], &resultado, sizeof(resultado));
+                informarResultado(numero, resultado);
+                hijoTermino[i] = 1;
+                cantidadTerminados++; 
+            } 
+        } 
+    }
+    wait(NULL) ;
+    return 0; }
+```
+
+Resolver la función `ejecutarHijo()` utilizando pipes y señales, respetando el siguiente comportamiento. 
+
+Para poder responder al polling del padre, cada hijo deberá crear un segundo subproceso que
+será el encargado de ejecutar la función calcular. Este subproceso (nieto) le avisará a su padre cuando
+haya terminado mediante una señal, comunicándole además el resultado. 
+
+El proceso hijo una vez que sepa que su proceso nieto terminó, responderá afirmativamente al polling del padre, enviándole el número y el resultado. A efectos del ejercicio y para evitar las posibles condiciones de carrera ocasionadas por el polling, se asumirá que dos llamados concurrentes a la función calcular no pueden terminar a
+la vez ni tampoco cercanos en el tiempo, sino con varios minutos de diferencia entre uno y otro.
+
+**Respuesta**: analicemos el código que nos entregan primero.
+
+- El padre inicializa $N*2$ pipes. Es decir, que inicializa tanto los pipes de los hijos, como los hijos-hijos. **Prestar atención a que cada hijo usa solamente 2 pipes. 1 pipe es la conexión con el padre. 1 pipe es la conexión con el hijo.**
+- Por el `write(pipes[i][1], &numero, sizeof(numero));` podemos notar que el padre envía a los `N` hijos el `número` que usará para hacer el cálculo, los hijos escucharán ese valor al comenzar al ejecutar pues `write` es síncrono. **Los pipes arrancan inicializados para los hijos igual que el padre: STDIN es el input del usuario y STDOUT es la consola, hay que redefinirlos.**
+- Cuando el padre entra al while define un char `termino` y se lo escribe al pipe al `hijo i`. Esto con la idea de que el hijo escriba ahí cuando terminó. 
+- El padre lee secuencialmente los resultados que dejó el `hijo i` en `read(pipes[N+i][0])`. 
+  - Notar que el orden es: hijo guarda resultados en el pipe. Y luego recién actualiza la dirección de `termino`
+
+Entonces, el código se podría ver algo así: 
+```c
+void ejecutarHijo(int i, int pipes[][2]){
+    // Redefino pipes del hijo-hijo para que escriban al hijo.
+    // Cierro los pipes de hijo que no va a usar. Solo dejo STDOUT hacia el padre y STDIN con HIJO-HIJO.
+    // Creo el hijo-hijo con fork(). Le paso los pipes por parámetro y el número que tiene que computar. El hijo-hijo cierra TODOS LOS PIPES (incluso su STDIN) excepto el STDOUT que redefinimos para mandarle a hijo el resultado.  
+    // El hijo se queda colgado esperando el resultado de hijo-hijo.
+    // El hijo-hijo escribe la respuesta con write() y hace _exit()
+    // El hijo recibe el resultado. Escribe en los extremos del pipe que tiene su padre, numero, resultado y terminó (en se orden).
+    // El hijo hace _exit()
+
+}
+```
