@@ -729,3 +729,54 @@ Traza
 Ya con que **cada uno avance un solo paso** tenemos el deadlock, porque básicamente en el próximo paso que les toca, se empiezan a esperar uno al otro.
 
 b) **Preguntar**: Creo que solo habría starvation si da la casualidad que el scheduler le da siempre el permiso a uno mismo entre que termina de hacer los $semSignal()$ y los $semWait()$. Después no veo otra. 
+
+## Ejercicio 11
+Se quiere simular la comunicación mediante pipes entre dos procesos mediante las syscalls read()
+y write(), pero usando memoria compartida (sin usar file descriptors). 
+
+Se puede pensar al pipe
+como un buffer de tamaño N, donde en cada posición se le puede escribir un cierto mensaje. 
+
+El read() debe ser bloqueante en caso que no haya ningún mensaje, y si el buffer está lleno, el write() también
+debe ser bloqueante. 
+
+No puede haber condiciones de carrera y se puede suponer que el buffer tiene los siguientes métodos: pop() (saca el mensaje y lo desencola), push() (agrega un mensaje al buffer).
+
+**Respuesta**: lo importante de acá es que el **read()** o **write()** son bloqueantes. Nosotros podemos simular obteniendo el recurso con un **mutex** y escribir $push()$ o leer $read()$.
+
+El productor va a poder producir tantos recursos como quiera y almacenarlos en el buffer siempre que haya espacio. Si hay espacio, puede producir. Así en loop.
+
+El consumidor va a poder leer siempre y cuando haya algo en el buffer, pero no es estrictamente que lea una cantidad determinada ni fija. 
+
+El orden en que se ejecutan el productor y consumidor no nos interesan ya que son concurrentes. Pero lo que sí debe cumplirse es que:
+
+- El productor no genera más si el buffer está lleno.
+- El consumidor no hace nada si no hay nada en el buffer.
+
+```text
+
+    sem(espacios) = N
+    sem(mensajes) = 0
+    mutex = 1
+
+    Productor:
+        repetir siempre:
+            wait(espacios) //si está en 0 no hay espacio
+            wait(mutex)
+            
+            buffer.push(mensaje)
+
+            signal(mutex)
+            signal(mensajes)
+
+    Consumidor:
+        repetir siempre:
+            wait(mensajes)
+            wait(mutex)
+
+            mensaje = buffer.pop()
+
+            signal(mutex)
+            signal(espacios)
+
+```
