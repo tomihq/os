@@ -562,8 +562,8 @@ A partir de ahí, cada proceso le va dando el permiso al siguiente: `Pi → Pi+1
     De esta forma, no necesitamos consultar el valor del semáforo. Cada `wait()` representa la espera de un evento concreto, y los dos `wait()` (o un for de dos iteraciones) garantizan que A no produzca nuevamente hasta que se hayan consumido ambos recursos.
     
     ```text
-        Semáforo recursos = 0
-        Semáforo consumidos = 0
+        semáforo(recursos) = 0
+        semáforo(consumidos) = 0
 
         Productor A
             mientras verdadero:
@@ -599,9 +599,9 @@ A partir de ahí, cada proceso le va dando el permiso al siguiente: `Pi → Pi+1
   - **Preguntar**: ¿En qué se diferencia **BB** de **C** a nivel de consumo de recursos? ¿**C** consume ambos en un solo turno, mientras que **B** consume 1 recurso por turno? Porque en mi pseudocódigo entonces estaría medio raro eso. Porque **C** entonces tendría sentido que tenga **wait(), wait()**, pero B debería tener: **wait()**, hacer una especie de **dejar el control**, tomarlo de vuelta y hacer **wait()** de vuelta. 
 
      ```text
-        Semáforo recursos = 0
-        Semáforo consumidos = 0
-        Semáforo consumidores[2] = [1, 0] //arranca B
+        semáforo(recursos) = 0
+        semáforo(consumidos) = 0
+        semáforo(consumidores[2]) = [1, 0] //arranca B
 
         Productor A
             mientras verdadero:
@@ -656,7 +656,7 @@ Suponer que se tienen $N$ procesos $P_i$, cada uno de los cuales ejecuta un conj
 Notar que enviamos $N$ señales desde el último que ejecuta $a_i$ *(necesitamos tener un mutex sobre el contador)* pues el mismo va a bloquearse, pero consumir el mismo permiso que otorgó.
 
 ```text
-    semáforo barrera;
+    semaforo(barrera) = 0 
     mutex count = 0; 
 
     Proceso i: 
@@ -678,3 +678,5 @@ Notar que enviamos $N$ señales desde el último que ejecuta $a_i$ *(necesitamos
         Ejecutar b_i 
 
 ```
+
+## Ejercicio 10
