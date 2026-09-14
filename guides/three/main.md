@@ -573,10 +573,8 @@ A partir de ahí, cada proceso le va dando el permiso al siguiente: `Pi → Pi+1
                 producir recurso 1
                 producir recurso 2
 
-            mientras verdadero:
-                para i = 1 hasta 2:
-                    signal(recursos)
-                    signal(recursos)
+                signal(recursos)
+                signal(recursos)
 
         Productor B/C
             mientras verdadero:
@@ -585,4 +583,65 @@ A partir de ahí, cada proceso le va dando el permiso al siguiente: `Pi → Pi+1
                 consumir 1 recurso
 
                 signal(consumidos)
+    ```
+4. Se le agregan unas restricciones al 3.
+   - **A** interviene en cada ronda *(llamemos ronda a la ejecución de la producción hasta el consumo de todos los recursos)* y aparece una vez por turno *(cuando no hay recursos)*. 
+   - **B** consume los dos recursos en orden. Primero el primer recurso, y luego, en otro turno, el otro recurso. 
+   - **C** **siempre** consume ambos recursos en un único turno. 
+   - La ejecución entre **B** y **C** es alternada.
+
+  ¿Qué problemáticas hay acá? 
+  - Si es el turno de **B**. Consume un recurso y tiene el control nuevamente para consumir el otro recurso. Siempre tiene dos turnos, en cada uno consume un recurso.
+  - Si es el turno de **C**, consume AMBOS recursos a la vez.
+  - Hay exclusión mutua sobre quien tiene el control: más allá de que haya **dos recursos**, solo **uno** opera con esos recursos en la ronda. Lo que necesitamos es que haya un permiso para modificar los recursos, y el que lo toma, hace lo que quiere con los N recursos. 
+  - Hay que decidir cómo definir el mecanismo de ejecución alternada. Podríamos definir un semáforo que lo usen B y C para que se digan entre ellos: "es tu turno". Entonces cuando el productor dice que ya están los recursos, ellos se fijan si ese "semáforo" de permiso lo tienen ellos. 
+  - **Preguntar**: asumo que arranca SIEMPRE B porque así está en el enunciado. Sino habría que tirar algun random() para que varíe eso.
+  - **Preguntar**: ¿En qué se diferencia **BB** de **C** a nivel de consumo de recursos? ¿**C** consume ambos en un solo turno, mientras que **B** consume 1 recurso por turno? Porque en mi pseudocódigo entonces estaría medio raro eso. Porque **C** entonces tendría sentido que tenga **wait(), wait()**, pero B debería tener: **wait()**, hacer una especie de **dejar el control**, tomarlo de vuelta y hacer **wait()** de vuelta. 
+
+     ```text
+        Semáforo recursos = 0
+        Semáforo consumidos = 0
+        Semáforo consumidores[2] = [1, 0] //arranca B
+
+        Productor A
+            mientras verdadero:
+                para i = 1 hasta 2:
+                    wait(consumidos)
+
+                producir recurso 1
+                producir recurso 2
+
+                signal(recursos)
+                signal(recursos)
+
+        Productor B
+            mientras verdadero:
+                wait(consumidores[0])
+
+                wait(recursos)
+                consumir 1 recurso
+
+                wait(recursos)
+                consumir 1 recurso
+
+                //Le avisamos a A que consumimos los recursos
+                signal(consumidos)
+                signal(consumidos)
+
+                signal(consumidores[1]) //turno de C :)
+
+        Productor C
+            mientras verdadero:
+                wait(consumidores[1])
+                
+                wait(recursos)
+                wait(recursos)
+                consumir 2 recursos
+                
+                //Le avisamos a A que consumimos los recursos
+                signal(consumidos)
+                signal(consumidos)
+
+                signal(consumidores[0]) //turno de B
+
     ```
