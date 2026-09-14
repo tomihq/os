@@ -864,3 +864,5 @@ Solo el último que hizo `experimentar()` debería enviar N señales para que em
             barrera2.wait();
         }
 ```
+
+## Ejercicio 13
