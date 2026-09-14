@@ -1019,7 +1019,6 @@ b)
 
     volatile sig_atomic_t received_sigint = 0;
     volatile sig_atomic_t received_sigup_hijo = 0; 
-    volatile sig_atomic_t received_sigup_padre = 0; 
     volatile sig_atomic_t received_sigint_hijo = 0; 
 
     void handler_sigint_padre(int sig) {
@@ -1034,12 +1033,10 @@ b)
         received_sigup_hijo = 1; 
     }
 
-    void handler_sigup_padre(int sig){
-        received_sigup_padre = 1;
-    }
+ 
     
     int main(){
-        int pipes[2][2];
+        int pipes[2];
         pipe(pipes);
         
         pid_t child = fork(); 
@@ -1064,7 +1061,7 @@ b)
 
             printf("Ya sé el significado de la vida");
             char mensaje = "42";
-            write(pipes[1][WRITE], &mensaje, sizeof(mensaje));
+            write(pipes[1], &mensaje, sizeof(mensaje));
             kill(parent, SIGINT);
 
             while(!received_sigup_hijo){
@@ -1076,7 +1073,7 @@ b)
             exit();
         }
 
-        close(pipe[1]);
+        close(pipes[1]);
         sigaction(SIGINT, &handler_sigint_padre);
         sigprocmask(SIG_BLOCK, )...
         nanosleep(algunTiempo)
@@ -1086,12 +1083,9 @@ b)
         printf("¿Cuál es el significado de la vida?");
         kill(child, SIGINT);
 
-        while(!received_sigint){
-            //se queda acá hasta que recibe la señal.
-        }
-
+        //acá no espero señal porque el read ya es bloqueante
         char mensaje; 
-        read(pipes[0][READ], &mensaje, sizeof(mensaje));
+        read(pipes[0], &mensaje, sizeof(mensaje));
 
         printf("Mirá vos. El significado de la vida es: %d", &mensaje);
         printf("¡Bang Bang, estás liquidado!");
@@ -1103,7 +1097,7 @@ b)
         nanosleep({10, 0});
 
         printf("Te voy a buscar en la oscuridad");
-        close(pipe[0]);
+        close(pipes[0]);
 
         exit(EXIT_SUCCESS);
 
