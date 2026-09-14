@@ -680,3 +680,52 @@ Notar que enviamos $N$ señales desde el último que ejecuta $a_i$ *(necesitamos
 ```
 
 ## Ejercicio 10
+Se tienen los siguientes dos procesos, $foo$ y $bar$, que son ejecutados concurrentemente. Además comparten los semáforos $S$ y $R$, ambos inicializados en $1$, y una variable global $x$, inicializada en $0$.
+
+```text
+void foo( ) {
+    do {
+        semWait(S);
+        semWait(R);
+        x++;
+        semSignal(S);
+        semSignal(R);
+    } while (1);
+}
+
+void bar( ) {
+    do {
+        semWait(R);
+        semWait(S);
+        x--;
+        semSignal(S);
+        semSignal(R);
+    } while (1);
+}
+```
+
+a) ¿Puede alguna ejecución de estos procesos terminar en *deadlock*? En caso afirmativo, describir una traza.
+
+b) ¿Puede alguna ejecución generar *starvation* para alguno de los procesos? En caso afirmativo, describir una traza.
+
+**Respuesta**: 
+
+a) sí, puede terminar en deadlock. Un deadlock se produce cuando tenemos un ciclo dentro de un grafo, o, para mí mejor dicho, dependencia circular entre componentes donde uno está esperando al otro que haga algo pero no arranca hasta que el otro lo haga.
+
+Similar a cuando dos personas enamoradas no se hablan hasta que el otro le hable.
+
+Traza
+
+```text
+    - [foo] semWait(S); consume un permiso (S = 1 -> S = 0).
+    - [bar] semWait(R); consume un permiso (R = 1 -> R = 0).
+    - [foo] semWait(R); no avanza (R = 0).
+    - [bar] semWait(S); no avanza (S = 0).
+        
+    ¡deadlock! 
+
+```
+
+Ya con que **cada uno avance un solo paso** tenemos el deadlock, porque básicamente en el próximo paso que les toca, se empiezan a esperar uno al otro.
+
+b) **Preguntar**: Creo que solo habría starvation si da la casualidad que el scheduler le da siempre el permiso a uno mismo entre que termina de hacer los $semSignal()$ y los $semWait()$. Después no veo otra. 
