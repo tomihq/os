@@ -734,13 +734,17 @@ debe ser bloqueante.
 
 No puede haber condiciones de carrera y se puede suponer que el buffer tiene los siguientes métodos: pop() (saca el mensaje y lo desencola), push() (agrega un mensaje al buffer).
 
-**Respuesta**: lo importante de acá es que el **read()** o **write()** son bloqueantes. Nosotros podemos simular obteniendo el recurso con un **mutex** y escribir $push()$ o leer $read()$.
+**Respuesta**: lo importante de acá es que el read() o write() son bloqueantes. Esto quiere decir que si el buffer está vacío, el read() se queda esperando a que haya datos, y si el buffer está lleno, el write() se queda esperando a que se libere espacio.
 
-El productor va a poder producir tantos recursos como quiera y almacenarlos en el buffer siempre que haya espacio. Si hay espacio, puede producir. Así en loop.
+Además, para evitar que tanto el productor como el consumidor modifiquen la memoria compartida a la vez (evitando condiciones de carrera), debemos usar un mutex que garantice exclusión mutua.
 
-El consumidor va a poder leer siempre y cuando haya algo en el buffer, pero no es estrictamente que lea una cantidad determinada ni fija. 
+El productor va a poder producir tantos recursos como quiera y almacenarlos en el buffer siempre que haya espacio. Si hay espacio, puede producir. Así en loop. Para denotar el espacio en el buffer podemos usar un semáforo contador que indique la cantidad de espacio libre disponible (que bloquee al escritor si llega a 0).
 
-El orden en que se ejecutan el productor y consumidor no nos interesan ya que son concurrentes. Pero lo que sí debe cumplirse es que:
+El consumidor va a poder leer siempre y cuando haya algo en el buffer. Para denotar la cantidad de mensajes que hay en el buffer podemos usar otro semáforo contador que indique los mensajes disponibles (que bloquee al lector si llega a 0).
+
+El orden en que se ejecutan el productor y consumidor no podemos conocerlo de antemano pues al ser concurrentes, su ejecución es no determinística.
+
+Pero lo que sí debe cumplirse es que:
 
 - El productor no genera más si el buffer está lleno.
 - El consumidor no hace nada si no hay nada en el buffer.
