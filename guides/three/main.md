@@ -860,8 +860,8 @@ Solo el último que hizo `experimentar()` debería enviar N señales para que em
             experimentar(); 
 
             mutex2.wait();
-            count2++;
-            if (count2 == N) {
+            count2--;
+            if (count2 == 0) {
                 count1 = 0; 
                 for (int i = 0; i < N; i++) {
                     barrera2.signal();
