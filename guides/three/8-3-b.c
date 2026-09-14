@@ -1,0 +1,60 @@
+#include <pthread.h>
+#include <semaphore.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+int N;
+int i;
+
+sem_t *sem;
+
+
+void *proceso(void *arg) {
+    int j = *(int *)arg;
+
+    int cant_veces = (j == 1) ? 2 : 1;
+    int siguiente = (j + 1) % N; 
+
+    while (1) {
+        sem_wait(&sem[j]);
+
+        for (int k = 0; k < cant_veces; k++) {
+            printf("Soy el proceso %d\n", j);
+        }
+
+        sem_post(&sem[siguiente]);
+    }
+
+    return NULL;
+}
+
+int main() {
+  N = 3;
+  i = 1;
+
+  pthread_t threads[N];
+  int indices[N];
+
+  sem = malloc(N * sizeof(sem_t));
+
+  for (int j = 0; j < N; j++) {
+    sem_init(&sem[j], 0, j == i ? 1 : 0);
+    indices[j] = j;
+  }
+
+  for (int j = 0; j < N; j++) {
+    pthread_create(&threads[j], NULL, proceso, &indices[j]);
+  }
+
+  for (int j = 0; j < N; j++) {
+    pthread_join(threads[j], NULL);
+  }
+
+  for (int j = 0; j < N; j++) {
+    sem_destroy(&sem[j]);
+  }
+
+  free(sem);
+
+  return 0;
+}

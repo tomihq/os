@@ -526,3 +526,22 @@ Proceso Pj:
 ```
 
 Notar que cada proceso hijo *(thread)* comparten el mismo espacio de memoria, por lo que pueden mutar la misma variable *sem*.
+
+## Ejercicio 8
+Considerar cada uno de los siguientes enunciados. Para cada caso, escribir el código que permita la ejecución de los procesos según la forma de sincronización planteada utilizando **semáforos**. Se debe argumentar por qué cada solución evita *starvation*.
+
+1. Se tienen tres procesos (A, B, C). Se desea que el orden en que se ejecutan sea el orden alfabético, es decir que las secuencias normales deben ser: ABC, ABC, ABC.
+2. Idem anterior, pero se desea que la secuencia normal sea: BBCA, BBCA, BBCA
+
+
+**Respuesta**: en el contexto de semáforos, tendríamos starvation si el proceso se duerme y nunca más lo despiertan. Es decir, no obtiene su turno.
+
+1. Inicializamos un semáforo para cada proceso, todos en 0 excepto el de la posición `i`, que se inicializa en 1. Cada proceso escucha su propio semáforo. Si `wait(&sem[j])` puede continuar, significa que el proceso `Pj` tiene el permiso y se desbloquea. Cuando termina de ejecutar, hace `signal(&sem[(j+1) % N])`, entregándole el permiso al siguiente proceso.
+La ejecución inicial es posible porque antes de crear los procesos ya dejamos preparado el primer permiso: `sem[i] = 1`. Por lo tanto, cuando `Pi` se crea y hace `wait(&sem[i])`, consume inmediatamente ese permiso que ya tenía asignado y puede ejecutar.
+A partir de ahí, cada proceso le va dando el permiso al siguiente: `Pi → Pi+1 → Pi+2 → ... → Pi`. De esta forma, el permiso va circulando entre todos los participantes en cada ronda. Esto evita inanición porque ningún proceso depende de competir por el permiso: el proceso anterior se lo entrega directamente al siguiente, y así todos reciben el turno eventualmente.
+2. Este es más interesante. 
+   1. (la que hice): Voy a asumir que BB significa: "B hace su acción 2 veces en su turno". Para eso podemos básicamente hacer una variable dentro del proceso que nos diga cuantas veces ejecutar la acción que hace el proceso. Si `j==1` entonces tenemos que ejecutarlo más de una vez. Lo que evita que se ejecute muchas veces (uno diferente de B) es que el while adentro tiene un for que justamente dice cuantas veces tiene que hacer su proceso por cada vez que tiene la ejecución. 
+   2. (la que quería hacer): ¿no se puede hacer algo recursivo solo en B hasta que acabe sus "N ejecuciones?" porque no sé, para mí el BB es: "B suelta el control y lo toma B de vuelta" y no "B hace dos veces lo mismo sin soltarlo".
+   
+   No hay starvation en ninguna porque es similar a la mencionada anteriormente. Siempre arrancamos con un proceso que tiene permiso, y luego el resto se va despertando a medida que su semáforo se pone en 1.
+3. B y C arrancan bloqueados esperando que un semáforo tenga un valor de 2.
