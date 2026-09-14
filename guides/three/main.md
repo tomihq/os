@@ -544,4 +544,45 @@ A partir de ahí, cada proceso le va dando el permiso al siguiente: `Pi → Pi+1
    2. (la que quería hacer): ¿no se puede hacer algo recursivo solo en B hasta que acabe sus "N ejecuciones?" porque no sé, para mí el BB es: "B suelta el control y lo toma B de vuelta" y no "B hace dos veces lo mismo sin soltarlo".
    
    No hay starvation en ninguna porque es similar a la mencionada anteriormente. Siempre arrancamos con un proceso que tiene permiso, y luego el resto se va despertando a medida que su semáforo se pone en 1.
-3. B y C arrancan bloqueados esperando que un semáforo tenga un valor de 2.
+3. Si bien el enunciado dice que el orden es "A**" tenemos que asumir que no sabemos con qué certeza los procesos se crean. 
+    - **B** y **C** deben arrancar bloqueados.
+    - **A** produce 2 recursos por turno. 
+    - **A** no se vuelve a ejecutar hasta que le hayan consumido los dos recursos.
+    - **B** y **C** pueden ejecutarse en cualquier orden. 
+    - **B** puede consumir los dos recursos o bien, los consume **C**. Notar que acá hay una condición de carrera que tenemos que **evitar**. 
+    - Siempre que haya **un recurso**, el cada proceso agarra uno por vez. 
+        - B agarra un recurso 1 - C agarra recurso 2 (notar que el orden es indistinto. También podría pasar que C se quede re contra colgado y B termine de consumir uno y agarre el otro)
+        - A recibe que ya se consumieron los recursos. A produce más.
+        - A emite la señal de que están listos.
+        - C termina de consumir recurso. B termina de consumir recurso. 
+        - Como A ya emitió que hay recursos, C y B pueden agarrarlos.
+
+    ¿Cómo hacemos esto? Como los semáforos representan permisos, podemos usar uno para representar la disponibilidad de recursos y otro para representar los recursos que ya fueron consumidos. `B` y `C` esperan mediante `wait()` a que haya un recurso disponible. Cada vez que uno consume un recurso, hace `signal()` sobre el semáforo de consumidos. A espera recibir dos señales de consumo y, recién entonces, vuelve a producir los dos recursos y libera dos permisos para `B` y `C`.
+
+    De esta forma, no necesitamos consultar el valor del semáforo. Cada `wait()` representa la espera de un evento concreto, y los dos `wait()` (o un for de dos iteraciones) garantizan que A no produzca nuevamente hasta que se hayan consumido ambos recursos.
+    
+    ```text
+        Semáforo recursos = 0
+        Semáforo consumidos = 0
+
+        Productor A
+            mientras verdadero:
+                para i = 1 hasta 2:
+                    wait(consumidos)
+
+                producir recurso 1
+                producir recurso 2
+
+            mientras verdadero:
+                para i = 1 hasta 2:
+                    signal(recursos)
+                    signal(recursos)
+
+        Productor B/C
+            mientras verdadero:
+                wait(recursos)
+
+                consumir 1 recurso
+
+                signal(consumidos)
+    ```
