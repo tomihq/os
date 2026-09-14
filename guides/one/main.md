@@ -120,11 +120,11 @@ b) Explicar qué causa cada transición y qué componentes *(scheduler, proceso,
 
 **Preguntar**:
 1. ¿Qué pasa en el caso de que en la PCB el proceso está BLOCKED pero un padre te tira un SIGTERM? ¿No pasaría de BLOCKED a TERMINATED? Para mí faltan flechas o este es un modelo simplificado que "asume que termina" solo si antes estaba running. 
-    Rta: sí, es debatible. Podría ser que pase a RUNNING a la hora de desalojar, y luego a terminated. Pero podría pasar de BLOCKED a TERMINATED.
+    **Respuesta**: sí, es debatible. Podría ser que pase a RUNNING a la hora de desalojar, y luego a terminated. Pero podría pasar de BLOCKED a TERMINATED.
 2. ¿Para qué queremos el estado new? 
-    Rta: Significa que **el proceso está siendo creado**.
+    **Respuesta**: Significa que **el proceso está siendo creado**.
 3. ¿Qué componentes estarían involucrados en el New -> Ready? 
-    Rta: Proceso padre ejecuta fork(). El Kernel recibe la solicitud de fork(), crea el proceso, le asigna y configura su PCB. La PCB guarda la info necesaria para administrar el nuevo proceso. Una vez que el proceso está correctamente, se lo coloca en READY (para el scheduler).
+    **Respuesta**: Proceso padre ejecuta fork(). El Kernel recibe la solicitud de fork(), crea el proceso, le asigna y configura su PCB. La PCB guarda la info necesaria para administrar el nuevo proceso. Una vez que el proceso está correctamente, se lo coloca en READY (para el scheduler).
 
 ## Ejercicio 5.
 a) Utilizando únicamente la llamada al sistema *fork()*, escribir un programa tal que construya un árbol de procesos que represente la siguiente genealogoía:
@@ -465,7 +465,6 @@ b) Modificar el programa anterior para que cumpla con las siguientes condiciones
 procesos hijos en lugar de uno, y 2) se respete esta nueva secuencia de mensajes entre los tres
 procesos.
 
-PREGUNTAR SI ESTÁ OK esto de que al Hijo 1 lo dejo colgado hasta que creo al Hijo 2, y después le paso al Hijo 1 la referencia de su hermano.
 
 1. Padre crea hijo 1.
 2. Padre crea hijo 2. Notar que el hijo 2 conoce al hijo 1 gracias a que lo comparte con el padre. Pero no al revés.
@@ -969,8 +968,12 @@ void ejecutarHijo(int i, int pipes[][2]) {
 
 **Preguntar**:
 1. ¿Cómo sabe el hijo-hijo que tiene que usar N+i-1 si N no es global?
+    **Respuesta**: sí, N debería ser global. Es un problema de enunciado.
 2. ¿Por qué necesito señales sí o sí si los read ya son bloqueantes? Pregunto porque el código del padre no aparenta escuchar o desbloquearse por una señal. **Me respondo solo: porque necesitás que el padre haga pooling todo el tiempo, no querés que los hijos se queden colgados. Por eso, el hijo solo debe terminar si el hijo-hijo manda una señal.** 
-3. Si el buffer tiene más de un dato a la vez, sí o sí tenés que escribir y sacar en orden no? Porque si tenés 3 int, no podés especificar en "qué lugar" querés guardarlo. Es decir, si querés guardar el 3ro tenes que llenar los otros lugares antes. **Sí, exacto** 
+3. Si el buffer tiene más de un dato a la vez, sí o sí tenés que escribir y sacar en orden no? Porque si tenés 3 int, no podés especificar en "qué lugar" querés guardarlo. Es decir, si querés guardar el 3ro tenes que llenar los otros lugares antes. 
+    **Respuesta**: sí, exacto. Además, cuando leemos algo con `read()` aunque mi buffer tenga mucho espacio, solo lees el primer "bloque" con datos.
+4. ¿Se termina el espacio del buffer?
+    **Respuesta**: acá vamos a asumir que no, porque si pasaría habría muchos más problemas.
 
 ## Ejercicio 18
 Se tiene un programa que cada vez que se lo ejecuta (sin parámetros) imprime lo siguiente en salida estándar
@@ -1102,4 +1105,10 @@ b)
         exit(EXIT_SUCCESS);
 
     }
+
+    Preguntar:
+    - Busy waiting con el while 
+        Respuesta: tema del while está bien. Había que detectar que hay un busy waiting porque no hay un pause() explícito.
+    - ¿Tengo que dar prioridad de alguna manera a lo de máscaras? 
+        Respuesta: No. No hace falta. Mientras que sepas que hace está ok pero no tenemos que ser expertos porque no lo tomaron nunca.
 ```

@@ -190,8 +190,7 @@ Starvation es: "nunca vas a llegar a tocar un proceso", lo cual es diferente de:
 
 **Preguntar**: ¿está bien lo de multilevel queue? porque YO entendí que si tenés una queue real-time con máxima prioridad, si te entra algún batch, pero tenés 9999999999 real-time *(1 proceso nuevo READY por segundo)* y 1 batch, el batch no lo ejecutás nunca hasta que vacías los real-time.
 Capaz SEGURO que existe una forma de decir: "ok, tomás alguno de otra queue y después seguís con la otra" pero yo interpreto que acá hasta que no vacías la máxima prioridad, no pasás a la otra.
-
-Sí. Es exactamente ese el tipo de problema que puede pasar. 
+   **Respuesta**: Sí. Es exactamente ese el tipo de problema que puede pasar. 
 
 ## Ejercicio 5
 Considere una modificación a *round-robin* en la que un mismo proceso puede estar encolado varias veces en la lista de procesos *ready*. Por ejemplo, en un RR normal se tendrían en la cola ready a P1, P2, P3, P4. Con esta modificación se podría tener P1, P1, P2, P1, P3, P1, P4.
@@ -454,7 +453,6 @@ b) Calcular el tiempo de turnaround promedio y el waiting time promedio.
 Algunas aclaraciones:
 
 - "Una cola 1 con quantum de 1 unidad de tiempo": se refiere a Round Robin con quantum de t = 1.
-- **Preguntar**: "Usa política con desalojo". ¿siempre que caiga algo en una queue de mayor prioridad se prioriza esa? Esta pregunta está porque, está en el mismo párrafo que "la cola 1 tiene más prioridad que la 2" y no creo que el "Usa política con desalojo" esté relacionado a una queue en particular.
 
 Entonces:
 

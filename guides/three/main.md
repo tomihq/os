@@ -586,8 +586,10 @@ A partir de ahí, cada proceso le va dando el permiso al siguiente: `Pi → Pi+1
   - Si es el turno de **C**, consume AMBOS recursos a la vez.
   - Hay exclusión mutua sobre quien tiene el control: más allá de que haya **dos recursos**, solo **uno** opera con esos recursos en la ronda. Lo que necesitamos es que haya un permiso para modificar los recursos, y el que lo toma, hace lo que quiere con los N recursos. 
   - Hay que decidir cómo definir el mecanismo de ejecución alternada. Podríamos definir un semáforo que lo usen B y C para que se digan entre ellos: "es tu turno". Entonces cuando el productor dice que ya están los recursos, ellos se fijan si ese "semáforo" de permiso lo tienen ellos. 
-  - **Preguntar**: asumo que arranca SIEMPRE B porque así está en el enunciado. Sino habría que tirar algun random() para que varíe eso.
+  - **Preguntar**: asumo que arranca SIEMPRE B porque así está en el enunciado. Sino habría que tirar algun random() para que varíe eso. 
+    **Respuesta**: **sí, correcto. es una decisión tuya**.
   - **Preguntar**: ¿En qué se diferencia **BB** de **C** a nivel de consumo de recursos? ¿**C** consume ambos en un solo turno, mientras que **B** consume 1 recurso por turno? Porque en mi pseudocódigo entonces estaría medio raro eso. Porque **C** entonces tendría sentido que tenga **wait(), wait()**, pero B debería tener: **wait()**, hacer una especie de **dejar el control**, tomarlo de vuelta y hacer **wait()** de vuelta. 
+    **Respuesta**: **Sí, la idea es que B haga un loop en sí mismo hasta que no haya recursos mientras que C consume dos cosas hardcodeadas** 
 
      ```text
         semáforo(recursos) = 0
@@ -596,14 +598,14 @@ A partir de ahí, cada proceso le va dando el permiso al siguiente: `Pi → Pi+1
 
         Productor A
             mientras verdadero:
-                para i = 1 hasta 2:
-                    consumidos.wait()
-
+          
                 producir recurso 1
                 producir recurso 2
+                recursos.signal()
+                recursos.signal()
 
-                recursos.signal()
-                recursos.signal()
+                para i = 1 hasta 2:
+                    consumidos.wait()
 
         Productor B
             mientras verdadero:
@@ -612,14 +614,9 @@ A partir de ahí, cada proceso le va dando el permiso al siguiente: `Pi → Pi+1
                 recursos.wait()
                 consumir 1 recurso
 
-                recursos.wait()
-                consumir 1 recurso
-
                 //Le avisamos a A que consumimos los recursos
                 consumidos.signal()
-                consumidos.signal()
 
-                consumidores[1].signal() //turno de C :)
 
         Productor C
             mientras verdadero:
@@ -720,7 +717,7 @@ Traza
 
 Ya con que **cada uno avance un solo paso** tenemos el deadlock, porque básicamente en el próximo paso que les toca, se empiezan a esperar uno al otro.
 
-b) **Preguntar**: Creo que solo habría starvation si da la casualidad que el scheduler le da siempre el permiso a uno mismo entre que termina de hacer los $semSignal()$ y los $semWait()$. Después no veo otra. 
+b) **Preguntar**: Creo que solo habría starvation si da la casualidad que el scheduler le da siempre el permiso a uno mismo entre que termina de hacer los $semSignal()$ y los $semWait()$. Después no veo otra. **Respuesta**: sí, correcto
 
 ## Ejercicio 11
 Se quiere simular la comunicación mediante pipes entre dos procesos mediante las syscalls read()
