@@ -642,3 +642,10 @@ Esto permite que el sistema sea interactivo sin dejar de generar imágenes conti
 No utilizaría Round Robin para las imágenes, ya que **las imágenes no son procesos independientes**. Existe un único proceso encargado de generarlas, por lo que no tendría sentido repartir la CPU entre "imagen 1", "imagen 2", "imagen 3", etc. El Round Robin podría utilizarse entre distintos procesos, pero no entre las imágenes generadas por un mismo proceso.
 
 En conclusión, elegiría un **scheduling por prioridades preemptivo**, dando mayor prioridad a las operaciones de edición y utilizando **FCFS entre las solicitudes de edición**. Se asume que dichas operaciones son suficientemente cortas como para que la generación de imágenes pueda recuperar la CPU rápidamente y mantener el flujo continuo de imágenes.
+
+## Ejercicio 16
+Anoto las respuestas de las cosas que pregunté del "como cambia el diseño"
+
+a. Aging a los procesos interactivos porque **si habría muchas alarmas, continuamente se subiría la prioridad e impediria que los procesos I/O se hagan**.
+b. Cola de menor prioridad. Como es algo nocturno podemos asumir que no hay tareas interactivas. Eventualmente se ejecutarán las cosas de backup sin ningún problema.
+c. Aging a los procesos interactivos que necesiten mucha CPU. Como son procesos largos, eventualmente van a ir consumiendo quantum pero no podemos dejarlos en la prioridad más baja porque los usuarios esperan interactividad a medida que se hace el proceso pesado.
