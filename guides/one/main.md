@@ -885,14 +885,53 @@ la vez ni tampoco cercanos en el tiempo, sino con varios minutos de diferencia e
 
 Entonces, el código se podría ver algo así: 
 ```c
+
+//0: Read
+//1: WRITE
+
 void ejecutarHijo(int i, int pipes[][2]){
-    // Redefino pipes del hijo-hijo para que escriban al hijo.
-    // Cierro los pipes de hijo que no va a usar. Solo dejo STDOUT hacia el padre y STDIN con HIJO-HIJO.
-    // Creo el hijo-hijo con fork(). Le paso los pipes por parámetro y el número que tiene que computar. El hijo-hijo cierra TODOS LOS PIPES (incluso su STDIN) excepto el STDOUT que redefinimos para mandarle a hijo el resultado.  
+    // Redefino pipes del hijo-hijo para que escriban al hijo. No hace falta creo, puedo usar (N+i)-1 para el hijo-hijo. Es decir, el hijo [0] tiene a su hijo-hijo que escribe en 0+N-i, osea, para N = 3 escribiría en [3] y tiene sentido xq los otros [1] y [2] son "hijos" y no "hijos-hijos"
+    // El hijo recibe el número a computar por STDIN. 
+    int numero = 0; 
+    int resultado = 0; 
+    ssize_t bytes_read = read(pipe[i][READ], &numero, sizeof(numero));
+    if(bytes_read == 0){
+        perror("NO DEBERÍA HABER PASADO");
+    }
+
+    pid_t pid_hijo_hijo = fork(); 
+    if(pid_hijo_hijo < 0){
+        perror("ERROR");
+    }
+
+    if(pid_hijo_hijo == 0){
+        read(pipe[hijo-hijo], )
+        int resultado_computo = calcular(numero);
+        write(pipe[hijo-hijo][WRITE], &resultado, sizeof(resultado));
+        exit();
+
+    }else{
+        read(pipe[hijo-hijo][READ], &resultado, sizeof(resultado));
+    }
+    // Creo el hijo-hijo con fork(). Le paso los pipes por parámetro y el número a cómputar. 
+     // Cierro STDIN del hijo. 
+     // Cierro los pipes de hijo que no va a usar. Solo dejo STDIN/STDOUT hacia el padre, STDIN con HIJO-HIJO.
+    // El hijo-hijo cierra TODOS LOS PIPES (incluso su STDIN) excepto el STDOUT que redefinimos para mandarle a hijo el resultado.  
     // El hijo se queda colgado esperando el resultado de hijo-hijo.
     // El hijo-hijo escribe la respuesta con write() y hace _exit()
+
     // El hijo recibe el resultado. Escribe en los extremos del pipe que tiene su padre, numero, resultado y terminó (en se orden).
+    
+    write(pipe[i][WRITE], &numero, sizeof(numero));
+    write(pipe[i][WRITE], &resultado, sizeof(resultado));
+    write(pipe[i][WRITE], &numero, sizeof(numero));
     // El hijo hace _exit()
+    _exit(127);
 
 }
 ```
+
+**Preguntar**:
+1. ¿Cómo sabe el hijo-hijo que tiene que usar N+i-1 si N no es global?
+2. ¿Por qué necesito señales sí o sí si los read ya son bloqueantes? Pregunto porque el código del padre no aparenta escuchar o desbloquearse por una señal.
+3. Si el buffer tiene más de un dato a la vez, sí o sí tenés que escribir y sacar en orden no? Porque si tenés 3 int, no podés especificar en "qué lugar" querés guardarlo. Es decir, si querés guardar el 3ro tenes que llenar los otros lugares antes.
