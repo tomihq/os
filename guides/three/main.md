@@ -495,7 +495,7 @@ De esta manera, no tenemos problemas con el orden en que el scheduler ejecuta lo
 Pseudocódigo:
 ```c
 
-Semáforo sem[0..N-1]
+semáforo(sem[0..N-1])
 
 para j = 0 hasta N-1:
     si j == i:
@@ -509,11 +509,11 @@ para j = 0 hasta N-1:
 
 Proceso Pj:
 
-    wait(sem[j])
+    sem[j].wait();
 
     ejecutar()
 
-    signal(sem[(j + 1) % N])
+    sem[(j+1) % N].signal();
 ```
 
 Notar que cada proceso hijo *(thread)* comparten el mismo espacio de memoria, por lo que pueden mutar la misma variable *sem*.
@@ -816,4 +816,47 @@ Primero hagamos el ciclo de implementarTp y experimentar() por única vez.
         barrera.wait();
         
         experimentar();
+```
+
+Ahora agreguemos el flujo de que podemos hacer esto N veces. Necesitamos que todos los que terminaron de experimentar() se queden colgados esperando que les den el "avancen a implementar". *(ojo con la primera vez, deberíamos inicializar con el permiso total para que todos puedan ejecutar)*
+
+Solo el último que hizo `experimentar()` debería enviar N señales para que empiecen a implementar de vuelta.
+
+```text
+
+    semáforo mutex1 = 1, mutex2 = 1;
+    semáforo barrera1 = 0, barrera2 = 0;
+    volatile int count1 = 0, count2 = 0;
+
+    Estudiante j:
+        while (true) {
+            implementarTp();
+
+            mutex1.wait();
+            count1++;
+
+            if (count1 == N) {
+                count2 = 0;
+                for (int i = 0; i < N; i++) {
+                    barrera1.signal();
+                }
+            }
+            mutex1.signal();
+
+            barrera1.wait();
+
+            experimentar(); 
+
+            mutex2.wait();
+            count2++;
+            if (count2 == N) {
+                count1 = 0; 
+                for (int i = 0; i < N; i++) {
+                    barrera2.signal();
+                }
+            }
+            mutex2.signal();
+
+            barrera2.wait();
+        }
 ```
