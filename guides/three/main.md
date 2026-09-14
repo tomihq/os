@@ -645,3 +645,36 @@ A partir de ahí, cada proceso le va dando el permiso al siguiente: `Pi → Pi+1
                 signal(consumidores[0]) //turno de B
 
     ```
+
+## Ejercicio 9
+Suponer que se tienen $N$ procesos $P_i$, cada uno de los cuales ejecuta un conjunto de sentencias $a_i$ y $b_i$. 
+
+¿Cómo se pueden sincronizar estos procesos de manera tal que los $b_i$ se ejecuten después de que se hayan ejecutado todos los $a_i$ ?
+
+**Respuesta**: Necesitamos tener una especie de barrera que bloquee a todos. El último que ejecute $a_i$ debe enviar la señal (N señales) al resto para que comiencen a ejecutar $b_i$. Cada proceso consumiría una $b_i$. 
+
+Notar que enviamos $N$ señales desde el último que ejecuta $a_i$ *(necesitamos tener un mutex sobre el contador)* pues el mismo va a bloquearse, pero consumir el mismo permiso que otorgó.
+
+```text
+    semáforo barrera;
+    mutex count = 0; 
+
+    Proceso i: 
+        Ejecutar a_i
+
+        mutex.lock()
+        count++;
+
+        if(count == N){
+            for(int i = 0; i<N; i++){
+                barrera.signal();
+            }
+        }
+        
+        mutex.unlock();
+        
+        barrera.wait()
+
+        Ejecutar b_i 
+
+```
