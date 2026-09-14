@@ -494,27 +494,18 @@ De esta manera, no tenemos problemas con el orden en que el scheduler ejecuta lo
 
 Pseudocódigo:
 ```c
-// ==========================
-// PROCESO PADRE
-// ==========================
 
 Semáforo sem[0..N-1]
 
-// Inicializa los semáforos
 para j = 0 hasta N-1:
     si j == i:
         sem[j] = 1
     sino:
         sem[j] = 0
 
-// Crea los N procesos hijos
 para j = 0 hasta N-1:
     crear_proceso(Pj)
 
-
-// ==========================
-// CADA PROCESO HIJO Pj
-// ==========================
 
 Proceso Pj:
 
@@ -568,13 +559,13 @@ A partir de ahí, cada proceso le va dando el permiso al siguiente: `Pi → Pi+1
         Productor A
             mientras verdadero:
                 para i = 1 hasta 2:
-                    wait(consumidos)
+                    consumidos.wait()
 
                 producir recurso 1
                 producir recurso 2
 
-                signal(recursos)
-                signal(recursos)
+                recursos.signal()
+                recursos.signal()
 
         Productor B/C
             mientras verdadero:
@@ -582,7 +573,7 @@ A partir de ahí, cada proceso le va dando el permiso al siguiente: `Pi → Pi+1
 
                 consumir 1 recurso
 
-                signal(consumidos)
+                consumidos.signal()
     ```
 4. Se le agregan unas restricciones al 3.
    - **A** interviene en cada ronda *(llamemos ronda a la ejecución de la producción hasta el consumo de todos los recursos)* y aparece una vez por turno *(cuando no hay recursos)*. 
@@ -606,43 +597,43 @@ A partir de ahí, cada proceso le va dando el permiso al siguiente: `Pi → Pi+1
         Productor A
             mientras verdadero:
                 para i = 1 hasta 2:
-                    wait(consumidos)
+                    consumidos.wait()
 
                 producir recurso 1
                 producir recurso 2
 
-                signal(recursos)
-                signal(recursos)
+                recursos.signal()
+                recursos.signal()
 
         Productor B
             mientras verdadero:
-                wait(consumidores[0])
+                consumidores[0].wait() *Preguntar sintáxis de esto*
 
-                wait(recursos)
+                recursos.wait()
                 consumir 1 recurso
 
-                wait(recursos)
+                recursos.wait()
                 consumir 1 recurso
 
                 //Le avisamos a A que consumimos los recursos
-                signal(consumidos)
-                signal(consumidos)
+                consumidos.signal()
+                consumidos.signal()
 
-                signal(consumidores[1]) //turno de C :)
+                consumidores[1].signal() //turno de C :)
 
         Productor C
             mientras verdadero:
-                wait(consumidores[1])
+                consumidores[1].wait()
                 
-                wait(recursos)
-                wait(recursos)
+                recursos.wait()
+                recursos.wait()
                 consumir 2 recursos
                 
                 //Le avisamos a A que consumimos los recursos
-                signal(consumidos)
-                signal(consumidos)
+                consumidos.signal()
+                consumidos.signal()
 
-                signal(consumidores[0]) //turno de B
+                consumidores[0].signal() //turno de B
 
     ```
 
@@ -657,12 +648,13 @@ Notar que enviamos $N$ señales desde el último que ejecuta $a_i$ *(necesitamos
 
 ```text
     semaforo(barrera) = 0 
-    mutex count = 0; 
+    semáforo(mutex) = 1
+    volatile count = 0; 
 
     Proceso i: 
         Ejecutar a_i
 
-        mutex.lock()
+        mutex.wait()
         count++;
 
         if(count == N){
@@ -671,7 +663,7 @@ Notar que enviamos $N$ señales desde el último que ejecuta $a_i$ *(necesitamos
             }
         }
         
-        mutex.unlock();
+        mutex.signal();
         
         barrera.wait()
 
@@ -755,28 +747,73 @@ El orden en que se ejecutan el productor y consumidor no nos interesan ya que so
 
 ```text
 
-    sem(espacios) = N
-    sem(mensajes) = 0
-    mutex = 1
+    semáforo(espacios) = N
+    semáforo(mensajes) = 0
+    semáforo(mutex) = 1
 
     Productor:
         repetir siempre:
-            wait(espacios) //si está en 0 no hay espacio
-            wait(mutex)
+            espacios.wait(); //si está en 0 no hay espacio
+            mutex.wait();
             
             buffer.push(mensaje)
 
-            signal(mutex)
-            signal(mensajes)
+            mutex.signal();
+            mensajes.signal();
 
     Consumidor:
         repetir siempre:
-            wait(mensajes)
-            wait(mutex)
+            mensajes.wait();
+            mutex.wait();
 
             mensaje = buffer.pop()
 
-            signal(mutex)
-            signal(espacios)
+            mutex.signal();
+            espacios.signal();
 
+```
+
+## Ejercicio 12
+Un grupo de $N$ estudiantes se dispone a hacer un TP de su materia favorita (Sistemas Operativos).
+Cada estudiante conoce a la perfección cómo `implementarTp()` y cómo `experimentar()`. 
+
+Curiosamente, cada una de estas acciones puede ser llevada acabo de manera independiente por cada uno,
+así que decidieron dividirse el trabajo.
+
+Acordaron dividir el trabajo en varias etapas. En cada etapa, todos los estudiantes deben primero
+`implementarTp()`, y recién cuando todos hayan terminado, pueden empezar a `experimentar()`. 
+
+Luego, para poder comenzar la siguiente etapa y volver a implementar, todos deben haber terminado de
+experimentar con la etapa anterior.
+
+Se pide diseñar un programa concurrente que utilice procesos y que modele esta situación utilizando
+semáforos.
+
+**Respuesta**: es similar al ejercicio 9. La diferencia es que acá hay dos barreras: una para hacer `implementarTp()` y otra para `experimentar()`.
+
+Primero hagamos el ciclo de implementarTp y experimentar() por única vez.
+
+```text
+
+    semáforo(barrera) = 0; 
+    semáforo(mutex) = 1;
+    volatile count = 0;
+
+    Estudiante j:
+        implementarTP()
+
+        mutex.wait();
+        count++;
+
+        if(count == N){
+            for(int i = 0; i<N; i++){
+                barrera.signal();
+            }
+        }
+
+        mutex.signal();
+
+        barrera.wait();
+        
+        experimentar();
 ```
