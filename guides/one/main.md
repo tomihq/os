@@ -971,3 +971,141 @@ void ejecutarHijo(int i, int pipes[][2]) {
 1. ¿Cómo sabe el hijo-hijo que tiene que usar N+i-1 si N no es global?
 2. ¿Por qué necesito señales sí o sí si los read ya son bloqueantes? Pregunto porque el código del padre no aparenta escuchar o desbloquearse por una señal. **Me respondo solo: porque necesitás que el padre haga pooling todo el tiempo, no querés que los hijos se queden colgados. Por eso, el hijo solo debe terminar si el hijo-hijo manda una señal.** 
 3. Si el buffer tiene más de un dato a la vez, sí o sí tenés que escribir y sacar en orden no? Porque si tenés 3 int, no podés especificar en "qué lugar" querés guardarlo. Es decir, si querés guardar el 3ro tenes que llenar los otros lugares antes. **Sí, exacto** 
+
+## Ejercicio 18
+Se tiene un programa que cada vez que se lo ejecuta (sin parámetros) imprime lo siguiente en salida estándar
+
+- ¿Cuál es el significado de la vida?
+- Dejame pensarlo...
+- Ya sé el significado de la vida. 
+- Mirá vos. El significado de la vida es 42.
+- ¡Bang Bang, estás liquidado!
+- Me voy a mirar crecer las flores desde abajo.
+- Te voy a buscar en la oscuridad.
+
+y al correrlo con strace se obtiene la siguiente salida (se omiten las partes irrelevantes):
+
+![Trace](18.png)
+
+a) Identificar qué funciones de la libc generan cada una de las syscalls observadas.
+
+b) Escribir un programa que posea un comportamiento similar al observado. Es decir que, al
+ejecutarlo, produzca la misma salida, y que la secuencia de syscalls observadas al correrlo con
+strace sea la misma que se muestra aquí.
+
+**Respuesta**
+a) 
+- execve       → execve()
+- pipe         → pipe()
+- clone        → fork() / clone()
+- close        → close()
+- getppid      → getppid()
+- rt_sigaction → sigaction()
+- rt_sigprocmask → sigprocmask()
+- nanosleep    → nanosleep()
+- fstat        → fstat()
+- mmap         → mmap()
+- write        → write()
+- kill         → kill()
+- read         → read()
+- rt_sigreturn → mecanismo interno de señales
+- restart_syscall → mecanismo interno del kernel
+- exit_group   → exit() / _exit()
+
+b)
+```c
+    El 90 es el hijo
+    El 89 es el padre
+
+    volatile sig_atomic_t received_sigint = 0;
+    volatile sig_atomic_t received_sigup_hijo = 0; 
+    volatile sig_atomic_t received_sigup_padre = 0; 
+    volatile sig_atomic_t received_sigint_hijo = 0; 
+
+    void handler_sigint_padre(int sig) {
+        received_sigint = 1;
+    }
+
+     void handler_sigint_hijo(int sig) {
+        received_sigint_hijo = 1;
+    }
+
+    void handler_sigup_hijo(int sig){
+        received_sigup_hijo = 1; 
+    }
+
+    void handler_sigup_padre(int sig){
+        received_sigup_padre = 1;
+    }
+    
+    int main(){
+        int pipes[2][2];
+        pipe(pipes);
+        
+        pid_t child = fork(); 
+        if(child == 0){
+            close(pipes[0]);
+
+            pid_t parent = getppid();
+            sigaction(SIGINT, &handler_sigint_hijo);
+            sigaction(SIGHUP, &handler_sigup_hijo);
+
+            while(!received_sigint_hijo){
+                //se queda acá hasta que recibe la señal (weird)
+            }
+
+            printf("Dejame pensarlo... \n");
+
+            sigprocmask(SIG_BLOCK, [CHLD]);
+            sigaction(SIGCHLD, NULL);
+            sigprocmask(SIG_SETMASK, [INT]);...
+
+            nanosleep({5, 0});
+
+            printf("Ya sé el significado de la vida");
+            char mensaje = "42";
+            write(pipes[1][WRITE], &mensaje, sizeof(mensaje));
+            kill(parent, SIGINT);
+
+            while(!received_sigup_hijo){
+                //se queda loopeando
+            }
+
+            printf("Me voy a mirar crecer las flores desde abajo");
+            close(pipes[1]);
+            exit();
+        }
+
+        close(pipe[1]);
+        sigaction(SIGINT, &handler_sigint_padre);
+        sigprocmask(SIG_BLOCK, )...
+        nanosleep(algunTiempo)
+        fstat(1), ...
+        nmap(...);          
+
+        printf("¿Cuál es el significado de la vida?");
+        kill(child, SIGINT);
+
+        while(!received_sigint){
+            //se queda acá hasta que recibe la señal.
+        }
+
+        char mensaje; 
+        read(pipes[0][READ], &mensaje, sizeof(mensaje));
+
+        printf("Mirá vos. El significado de la vida es: %d", &mensaje);
+        printf("¡Bang Bang, estás liquidado!");
+
+        kill(child, SIGHUP);
+        sigprocmask(SIG_BLOCK, [CHLD]);
+        sigaction(SIGCHLD, NULL);
+        sigprocmask(SIG_SETMASK, [INT]);
+        nanosleep({10, 0});
+
+        printf("Te voy a buscar en la oscuridad");
+        close(pipe[0]);
+
+        exit(EXIT_SUCCESS);
+
+    }
+```
