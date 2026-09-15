@@ -105,3 +105,29 @@ enviarResultados(trabajo);
 ```
 
 ## Ejercicio 3 
+Se quiere avanzar en el diseño de un sistema de control para un dron autónomo de rescate. Este sistema debe gestionar múltiples tareas simultáneamente para garantizar un funcionamiento eficiente del dron. El dron debe ser capaz de ejecutar tareas con periocidad fija y *deadlines* estrictos (se garantiza que siempre se pueden cumplir), tales como el escaneo de obstáculos y la estabilización de vuelo.
+
+Además, el sistema debe procesar *logs* en segundo plano sin afectar el rendimiento general del sistema. También, debe ser capaz de gestionar tareas disparadas remotamente por el operador, las cuales pueden tener diferentes niveles de prioridad (urgente, media, baja), permitiendo al operador priorizar ciertas tareas según la urgencia.
+
+a) Proponer un esquema de *scheduling* para este sistema que tenga en cuenta todas las restricciones y requerimientos. Justificar detalladamente cada decisión.
+
+b) La siguiente tabla representa el comportamiento de las tareas periódicas con *deadlines* específicos. Dibujar el diagrama de Gantt resultante de aplicar el esquema escrito en el inciso anterior, desde el momento 0 hasta los 25ms.
+
+**Respuesta**:
+
+a) Tenemos tres tipos de tareas
+- Tareas con periocidad fija y **deadlines estrictos**
+- *Logs* en segundo plano. 
+- Tareas disparadas remotamente por el operador que pueden tener diferente prioridad.
+
+Lo importante acá es que la prioridad NÚMERO 1 son las tareas que tienen un deadline. ¿Por qué? porque el deadline es estricto. Si no lo cumplimos pueden pasar cosas graves.
+
+Para esto podemos usar un algoritmo con desalojo que ejecute el que tiene el deadline más próximo. Si estamos ejecutando una que tiene el deadline en 5s y cae una que lo tiene en 1s, tenemos que priorizar la de 1s, por eso el desalojo.
+
+Las tareas disparadas remotamente por el operador no se especifica si tienen deadline, así que podemos usar una prioridad NÚMERO 2, y desempatar en esta misma cola por PRIORIDAD. Es decir, si el operador envía BAJA y URGENTE necesitamos sí o sí desalojar la BAJA y ejecutar la URGENTE así que va a ser con desalojo. Acá podemos usar un Round Robin con prioridades. **Notar que asumo que las de deadline son la prioridad máxima. El operador deberá esperar si hay otras cosas con deadline más prioritarias**  
+
+¿Podría pasar que estas queden en starvation? podría suceder si tenemos constantemente eventos con deadlines, pero como mencionamos anteriormente, no podemos permitir que no se ejecuten en ese deadline.
+
+Las tareas de logs pueden tranquilamente estar en una queue de la menor prioridad posible, y usar un sistema de aging para que no queden en starvation infinitamente. Podemos usar un Round Robin sin ningún problema.
+
+Lo que sí debemos garantizar siempre es que: tareas con deadline > tareas por operador (se organizan por urgencia y hay desalojo si llega una con mayor urgencia) > sistema de logs. 
