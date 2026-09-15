@@ -1,3 +1,10 @@
+## Ejercicio 1
+
+**Respuesta**:
+
+b) Usaría el arreglo $m$ como variable compartida y un **mutex**. El padre debería recibir una señal por cada hijo que termina, para notificarle a los hijos qué tiene que procesar el que envió la señal. El padre recorrería el array y se fijaría que índice no fue llenado, y le diría al hijo: "hacé este índice ahora", y el hijo cuando termina, pone el valor en el array y envía la señal.  
+
+
 ## Ejercicio 2
 Tenemos un sistema donde existen dos tipos de procesos:
 
