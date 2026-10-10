@@ -163,3 +163,21 @@ Aclaración: solo puse el mutex a modo de ejemplo de que si tenés varios *IN/OU
 3. ¿Asumo que está bien hecha la configuración del dispositivo de hardware para emitir la interrupción, no? La hice en el *driver_init()*. ¿Qué pasaría si BTN_STATUS tiene alguna otra información, haciendo lo que hago hoy, no estaría pisando esa configuración previa? 
 
 ## Ejercicio 5
+El administrador de E/S es un componente del sistema operativo.
+
+Cuando alguien efectúa un *open()* está solicitando el acceso al driver. El *open()* prepara el acceso a un archivo o dispositivo para que después el usuario pueda operar con él.
+1. Resuelve qué recurso querés abrir, a partir de la ruta /dev/tecla.
+2. Verifica si tenés permiso para acceder a ese recurso.
+3. Prepara el estado necesario para esa apertura, incluyendo la información que permitirá identificar el recurso en las operaciones posteriores.
+4. Te devuelve un file descriptor (fd), que es el identificador que vas a usar en read(), write() y otras operaciones.
+
+Cuando alguien efectúa un *write()* el proceso le pide al SO que escriba una determinada cantidad de datos en el recurso asociado a un file descriptor.
+
+## Ejercicio 6
+El nivel de acceso para las syscalls IN y OUT deben ser de privilegio Kernel.
+
+Porque estas instrucciones te permiten interactuar con registros de E/S del hardware.
+
+En nivel de usuario no podés. 
+
+## Ejercicio 7
