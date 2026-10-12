@@ -1,2 +1,5 @@
 *.o
 Operating.System.Concepts.*.pdf
+
+.vm/
+*/tools/*
