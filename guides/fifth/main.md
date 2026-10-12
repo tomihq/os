@@ -51,7 +51,8 @@ A continuación, un pseudocódigo aproximado.
 
     int driver_read(int* data){
         int tiempo = IN(CHRONO_CURRENT_TIME);
-        return tiempo; 
+        copy_to_user(data, &tiempo, sizeof(tiempo));
+        return IO_OK; 
     }
 
     int driver_write(int* data){
@@ -92,10 +93,19 @@ El objetivo, por lo que interpreto, es que hay que hacer busy waiting en el driv
         return IO_OK;
     }
 
+    //el usuario hace algo así
+    /*  int data
+        read(fd, &data, sizeof(data))
+    */
+
     int driver_read(int* data){
         while((IN(BTN_STATUS) & 0x01) == 0);
         OUT(0, BTN_STATUS);
-        return BTN_PRESSED; 
+        
+        int pressed = BTN_PRESSED;
+        copy_to_user(data, &pressed, sizeof(pressed));
+
+        return IO_OK; 
     }
 
     int driver_write(int* data){
@@ -137,8 +147,11 @@ Aclaración: solo puse el mutex a modo de ejemplo de que si tenés varios *IN/OU
         sem.wait();
         mutex.lock();
         OUT(0, BTN_STATUS);
+        int btn_pressed = IN(BTN_STATUS);
         mutex.unlock();
-        return BTN_PRESSED; 
+
+        copy_to_user(data, &btn_pressed, sizeof(btn_pressed));
+        return IO_OK; 
     }
 
     int driver_write(int* data){
