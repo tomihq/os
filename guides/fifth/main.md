@@ -1,5 +1,45 @@
 # Guía 5: Entrada/Salida
 
+## Tabla de convenciones
+## API del SO para operar con un dispositivo de E/S
+
+| Función                               | Descripción                                     |
+| ------------------------------------- | ----------------------------------------------- |
+| `int open(int device_id)`             | Abre el dispositivo.                            |
+| `int close(int device_id)`            | Cierra el dispositivo.                          |
+| `int read(int device_id, int *data)`  | Lee el dispositivo `device_id`.                 |
+| `int write(int device_id, int *data)` | Escribe el valor en el dispositivo `device_id`. |
+
+Todas las operaciones retornan `IO_OK` si fueron exitosas o `IO_ERROR` si ocurrió algún error.
+
+## Procedimientos que debe implementar el driver
+
+| Función                       | Invocación                  |
+| ----------------------------- | --------------------------- |
+| `int driver_init()`           | Durante la carga del SO.    |
+| `int driver_open()`           | Al solicitarse un `open`.   |
+| `int driver_close()`          | Al solicitarse un `close`.  |
+| `int driver_read(int *data)`  | Al solicitarse un `read`.   |
+| `int driver_write(int *data)` | Al solicitarse un `write`.  |
+| `int driver_remove()`         | Durante la descarga del SO. |
+
+## Syscalls y funciones disponibles para programar el driver
+
+| Función                                                         | Descripción                                                                                                       |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `void OUT(int IO_address, int data)`                            | Escribe `data` en el registro de E/S.                                                                             |
+| `int IN(int IO_address)`                                        | Devuelve el valor almacenado en el registro de E/S.                                                               |
+| `int request_irq(int irq, void *handler)`                       | Asocia el procedimiento `handler` a la interrupción IRQ. Devuelve `IRQ_ERROR` si ya está asociada a otro handler. |
+| `int free_irq(int irq)`                                         | Libera la interrupción IRQ del procedimiento asociado.                                                            |
+| `unsigned long copy_from_user(char *to, char *from, uint size)` | Copia datos desde el espacio de usuario al espacio del kernel.                                                    |
+| `unsigned long copy_to_user(char *to, char *from, uint size)`   | Copia datos desde el espacio del kernel al espacio de usuario.                                                    |
+| `void *kmalloc(uint size)`                                      | Reserva memoria en el kernel.                                                                                     |
+| `void kfree(void *buf)`                                         | Libera memoria reservada previamente.                                                                             |
+| `void sema_init(semaphore *sem, int value)`                     | Inicializa un semáforo con el valor indicado.                                                                     |
+| `void sema_wait(semaphore *sem)`                                | Decrementa el semáforo o bloquea hasta que pueda hacerlo.                                                         |
+| `void sema_signal(semaphore *sem)`                              | Señaliza el semáforo para permitir que continúe otro proceso bloqueado o incrementar su valor.                    |
+| `void mem_map(void *source, ...)`                               | La declaración está incompleta en el texto proporcionado.                                                         |
+
 ## Ejercicio 1
 Las verdaderas son $a$ y $c$.
 
