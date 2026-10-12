@@ -45,7 +45,7 @@ Las verdaderas son $a$ y $c$.
 
 El driver es un software que forma parte del sistema operativo y que conoce tanto las particularidades del modelo que corre como la interfaz del SO en el que corre.
 
-Conoce tanto al SO como para el modelo de dispositivo que va a servir debido a que necesita conocer sus registros, comandos y particularidades.
+¿Por qué necesita conocer al SO y al modelo del dispositivo? Porque necesita conocer sus registros, comandos y particularidades.
 
 Corre en privilegio Kernel porque accede a registros, memoria del dispositivo, etc. 
 
@@ -157,7 +157,6 @@ El objetivo, por lo que interpreto, es que hay que hacer busy waiting en el driv
 
 ```
 
-**Preguntar**: ¿cuando sabés si tenés que meter la información de retorno en data o devolver directo en la función? porque a veces los "retornar" no los interpreto tan claramente.
 
 ## Ejercicio 4
 Ahora nos piden el ejercicio 3 pero con interrupciones.
