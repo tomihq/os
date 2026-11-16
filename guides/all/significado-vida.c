@@ -6,6 +6,9 @@
 #include <time.h>
 #define EXIT_SUCCESS 0 
 
+int pipeW[2]; //3, 4
+pid_t parent, child = 0; 
+
 /*  
     Replicar traza (18)
     Para exportar output: strace -q -f -o significado-vida.txt ./significado-vida
@@ -56,9 +59,6 @@ void handler3(int sig){
     close(pipeW[1]);
     exit(EXIT_SUCCESS);
 }
-
-int pipeW[2]; //3, 4
-pid_t parent, child = 0; 
 
 int main(){
     pipe(pipeW);

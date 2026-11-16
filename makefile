@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -pedantic -g
-TARGET = cadena
+TARGET = significado-vida
 VPATH = $(shell find . -type d | tr '\n' ':')
 
 all: $(TARGET)
