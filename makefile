@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -pedantic -g
-TARGET = fantasma-shell
+TARGET = consumer-producer
 VPATH = $(shell find . -type d | tr '\n' ':')
 
 all: $(TARGET)
