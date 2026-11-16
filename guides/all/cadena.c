@@ -8,6 +8,7 @@
 
 /*  
     Replicar traza (10)
+    Para exportar output: strace -q -f -o salida-cadena.txt ./cadena
 */
 
 int main(){
