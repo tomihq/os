@@ -25,6 +25,11 @@ pid_t wait(int* status): bloquea el programa (blocked en scheduler) hasta que al
 Wait utiliza waitpid internamente: waitpid(-1, &status);
 
 void sleep(int time): duerme al proceso por el tiempo especificado con la variable time. El tiempo debe estar en segundos (se puede configurar para otra unidad igual)
+Internamente utiliza varias syscalls:
+        - rt_sigprocmask(SIG_BLOCK, [CHLD], ..)
+        - rt_sigaction(SIGCHLD, NULL, ...)
+        - rt_sigprocmask(SIG_SETMASK, ...)
+        - nanosleep({time, 0}, ...)
 
 pid_t getppid(): obtiene el PID del padre del proceso que lo está invocando. 
 
@@ -112,6 +117,8 @@ De las anteriores que mencionamos de la libc, son Async-Signal-Safe las siguient
 ```c
 write, read, open, close, _exit, kill, fork, execve, wait, waitpid, signal, pipe, dup2, sleep
 ```
+
+Ej.: en un handler hacemos esto write(STDOUT_FILENO, "Mirá vos. El significado de la vida es 42\n", 44); y no un printf.
  
 ### Aclaraciones
 ```c
