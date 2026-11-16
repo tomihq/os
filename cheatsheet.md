@@ -21,7 +21,7 @@ void pause(): bloquea el programa (blocked en scheduler) y no te despertás hast
 pid_t waitpid(pid_t pid, int* status): bloquea el programa (blocked en scheduler) hasta que el hijo con pid proporcionado se ponga en el estado proporcionado por parámetro. El valor default es que el hijo termine.
 Utiliza la syscall wait4.
 
-pid_t wait(int* status): bloquea el programa (blocked en scheduler) hasta que algún hijo se ponga en el estado proporcionado. El valor default es que algún hijo termine.
+pid_t wait(int* status): bloquea el programa (blocked en scheduler) hasta que algún hijo se ponga en el estado proporcionado. El valor default es que algún hijo termine, y lo enviás como NULL. 
 Wait utiliza waitpid internamente: waitpid(-1, &status);
 
 void sleep(int time): duerme al proceso por el tiempo especificado con la variable time. El tiempo debe estar en segundos (se puede configurar para otra unidad igual)
@@ -40,10 +40,9 @@ ssize_t write(int fd, const void buf[count], size_t count): escribe al archivo r
 
 ssize_t read(int fd, void buf[count], size_t count): lee al archivo referido por el file descriptor, y almacena en {count} bytes en el buffer.
 
-open
-int close(int fd): cierra un file descriptor
+int open(char* path, int flags, ...): abre un archivo y te devuelve un file descriptor que apunta a ese archivo.
+int close(int fd): cierra un file descriptor para el proceso actual. 
 int pipe(int pipefd[2]): se crea un pipe unidireccional. Cada elemento refiere a un file descriptor. El 0 es el extremo de lectura mientras que el 1 es el extremo de escritura. 
-Todos quienes no vayan a usarlo deben cerrarlos (incluso los que terminaron de usarlos deben cerrarlos), de lo contrario nunca se llegará al EOF. 
 
 Tanto el write() y read() del pipe son bloqueantes.
 int dup2(int oldfd, int newfd): duplica un file descriptor. En particular, newfd refiere al mismo file descriptor que oldfd.
@@ -122,6 +121,10 @@ Esta estrategia es conocida como copy-on-write. En vez de copiar toda la memoria
 pid_t wait*(): recolecta los recursos de los hijos que hayan finalizado o bien con exit() o return, o hayan muerto por una señal. Es indispensable hacer esta recolección para no dejar a los hijos en modo Zombie.
 
 void kill(pid_t pid, int señal): a nivel de procesos, los padres pueden enviar señales a sus hijos, sus hijos a sus padres, y los hijos entre ellos (hermanos). 
+
+Pipes: todos quienes no vayan a usarlo deben cerrarlos (incluso los que terminaron de usarlos deben cerrarlos), de lo contrario nunca se llegará al EOF. 
+Tenés que cerrar cada extremo por separado, porque son file descriptors diferentes.
+
 ```
 
 ## Utilidades Sockets
