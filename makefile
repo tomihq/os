@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -pedantic -g
-TARGET = 8-3-a
+TARGET = simozon
 VPATH = $(shell find . -type d | tr '\n' ':')
 
 all: $(TARGET)
