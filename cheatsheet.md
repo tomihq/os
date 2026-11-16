@@ -23,6 +23,7 @@ Utiliza la syscall wait4.
 
 pid_t wait(int* status): bloquea el programa (blocked en scheduler) hasta que algún hijo se ponga en el estado proporcionado. El valor default es que algún hijo termine, y lo enviás como NULL. 
 Wait utiliza waitpid internamente: waitpid(-1, &status);
+Recomendación: por cada *fork()* que hagas, anotá que tenés que agregar un wait por cada uno. 
 
 void sleep(int time): duerme al proceso por el tiempo especificado con la variable time. El tiempo debe estar en segundos (se puede configurar para otra unidad igual)
 Internamente utiliza varias syscalls:
@@ -41,16 +42,19 @@ void kill(pid_t pid, int señal): envía la señal indicada por parámetro al pr
 
 void signal(int signal, sighandler_t handler): hace el rehandleo de una señal en particular.
 
-ssize_t write(int fd, const void buf[count], size_t count): escribe al archivo referido por el file descriptor, {count} bytes del buffer enviado como parámetro.
+ssize_t write(int fd, const void buf[count], size_t count): escribe al archivo referido por el file descriptor, {count} bytes del buffer enviado como parámetro. Es bloqueante.
 
-ssize_t read(int fd, void buf[count], size_t count): lee al archivo referido por el file descriptor, y almacena en {count} bytes en el buffer.
+ssize_t read(int fd, void buf[count], size_t count): lee al archivo referido por el file descriptor, y almacena en {count} bytes en el buffer. Es bloqueante.
 
 int open(char* path, int flags, ...): abre un archivo y te devuelve un file descriptor que apunta a ese archivo.
 int close(int fd): cierra un file descriptor para el proceso actual. 
 int pipe(int pipefd[2]): se crea un pipe unidireccional. Cada elemento refiere a un file descriptor. El 0 es el extremo de lectura mientras que el 1 es el extremo de escritura. 
+Recomendación: por cada *pipe()* que hagas, anotá que tenés que agregar un close por cada uno. Es decir, close(pipefd[0]) y close(pipefd[1]) (ref: fantasma-shell)
+
 
 Tanto el write() y read() del pipe son bloqueantes.
 int dup2(int oldfd, int newfd): duplica un file descriptor. En particular, newfd refiere al mismo file descriptor que oldfd.
+Recomendación: si no vas a usar más oldfd, cerralo con close(). Ej.: oldfd es un pipe de escritura, pero querés que STDOUT escriba a ese pipe, entonces hacés dup2(fdPipeNuevo, STDOUT) y una vez que STDOUT sabe que tiene que escribir a ese pipe (porque tiene su puntero), cerrá fdPipeNuevo (ref: fantasma-shell)
 ```
 Para ver qué syscalls se hacen cuando usamos una función, podemos usar programas como strace. 
 
@@ -140,3 +144,60 @@ Si uno de los procesos escritores hace close(pipes[1]), pero el otro no, entonce
 ## Utilidades Sockets
 1. Una vez que aceptás la conexión, hacés fork() y a ese proceso lo hacés responsable de su propio file descriptor. El servidor cierra ese fd porque no lo va a usar.
 2. Enviar y recibir información puede ser pesado. Mencionar siempre que vas pasando de a pedacitos (chunks), donde el Content-Length es lo que te permite determinar después: cuanto leíste y cuanto te falta. 
+
+## Sincronización entre procesos
+- ¿Qué es un proceso? Es una instancia de un programa. Cada proceso tiene sus registros, su stack, su espacio de direcciones, archivos, etc.
+- ¿Qué es un thread? Es un espacio de direcciones único, con sus archivos que contiene uno o más procesos en ejecución. Acá, cada proceso no tiene su espacio de direcciones ni de archivos propio. La comparten.
+- ¿Cuándo dos eventos son concurrentes? Dados A y B, estos son concurrentes si no sabemos en qué orden van a llegar.
+- ¿Qué es el paralelismo? Es la ejecución de uno o varios procesos al mismo tiempo, es decir, en diferentes procesadores.
+- ¿Qué es una condición de carrera? Es un defecto de un programa que su correctitud depende de un orden de ejecución de ciertos eventos.
+- ¿Qué es una operación atómica? Una operación es atómica cuando es indivisible. Es una operación que sí o sí tiene que hacerse entera para valer. Si se hace a medias, puede haber problemas. En general no sabemos qué operaciones se realizan en un paso y cuáles pueden ser interrumpidas.
+- ¿Qué es una variable atómica? Es un objeto que nos permite realizar operaciones de escritura y lectura de forma atómica.
+- ¿Qué es un semáforo? Es un tipo abstracto de datos que permite controlar el acceso de múltiples procesos a un recurso común. No se puede acceder al valor que contiene. Solo podemos interactuar con él solo con wait() y signal(). La operación signal() envía una señal para despertar a alguno de los procesos que está esperando, mientras que wait() solicita el permiso que luego se le termina otorgando al recibir un signal.
+        - ¿Está garantizado que si un proceso envía signal(), inmediatamente se ejecuta alguno de los que hizo wait()? ¡No! Depende del scheduler. Es más, podría ser que mandes N signal() y solo UNO consuma las N y el resto nunca se llegue a ejecutar porque el scheduler no les dió prioridad.
+        - Si tengo varios procesos que hicieron wait(), ¿puedo saber cuál se va a despertar primero cuando llegue la señal signal()? ¡No!
+- Si tengo un único recurso a proteger, y dos procesos ¿tiene sentido tener dos semáforos para el mismo recurso? ¡No! un recurso = un semáforo. 
+- ¿Qué es una sección crítica? Una sección crítica, es aquella sección que accede a memoria compartida y queremos que se ejecute atómicamente. Hay que garantizar que lo que está en esta sección realmente necesite protegerse en cuanto a atomicidad. Agregar cosas que no necesiten protegerse de la concurrencia a la sección crítica haría que otros procesos no puedan seguir computando libremente. 
+- ¿Qué es la exclusión mutua? Es asegurar que dos threads no ejecutan una sección crítica simultáneamente.
+- ¿Qué es un deadlock? Es una dependencia circular. Algunos tips para identificar deadlocks. 
+        - Recursos bloqueados: los procesos esperan indefinidamente por recursos que están siendo retenidos por otros procesos.
+        - Espera Circular: existe una cadena circular de procesos, donde cada uno está esperando el recurso del siguiente proceso de la cadena.
+        - No Liberación: un proceso mantiene recursos mientras espera otros, sin liberar los recursos que ya posee.
+        - Tiempo de Espera Infinito: los procesos no logran acceder a una sección crítica.
+
+### API
+```c
+Variables Atómicas
+atomic<int> var
+var.set(unsigned int value): cambia el valor de la variable por {value}.
+var.getAndInc(): devuelve el valor de la variable, y luego incrementa en uno.
+var.getAndAdd(unsigned int value): devuelve el valor de la variable, y luego incrementa en {value}
+
+Semáforos
+var = sem(unsigned int value): inicializa un semáforo.
+var.signal(): incrementa en uno el valor del semáforo y despierta a alguno de los procesos que están esperando ese semáforo.
+var.wait(): mientras el valor sea menor o igual a 0 se bloquea (duerme) el proceso esperando un signal. Luego, decrementa el valor del semáforo.
+
+```
+
+### Patrones de Sincronización
+### Mutex
+Protección de un recurso ante varios procesos.
+ref: mutex.md
+
+#### Signaling
+Cuando querés garantizar un orden de de ejecución en una sola dirección. Cada proceso tiene su propio semáforo de permiso, y el que termina su turno le hace signal al siguiente.
+ref: orquestación.md
+
+#### Punto de Encuentro / Barrera
+Es la sincronización entre **dos procesos fijos**. Cada uno espera al otro en un punto determinado, y recién cuando ambos llegan, siguen adelante.
+ref: barrera.md
+
+#### Barrera Turnstile / Molinete
+Es la generalización de la barrera para **N** procesos. Se le llama molinete por como se "abre" y deja pasar a todos uno atrás del otro.
+
+La estructura es: cada proceso espera que se abra y apenas pasa vuelve a hacer signal para dejar pasar al siguiente.
+barrera.wait()
+barrera.signal()
+
+ref: molinete.md
