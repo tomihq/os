@@ -122,8 +122,11 @@ pid_t wait*(): recolecta los recursos de los hijos que hayan finalizado o bien c
 
 void kill(pid_t pid, int señal): a nivel de procesos, los padres pueden enviar señales a sus hijos, sus hijos a sus padres, y los hijos entre ellos (hermanos). 
 
-Pipes: todos quienes no vayan a usarlo deben cerrarlos (incluso los que terminaron de usarlos deben cerrarlos), de lo contrario nunca se llegará al EOF. 
+Pipes: todos los que no usen el pipe tienen que cerrarlo. 
 Tenés que cerrar cada extremo por separado, porque son file descriptors diferentes.
+
+¿Por qué necesitás cerrar los pipes? Digamos que hay dos procesos que escriben a pipes[1] (extremo de escritura), y hay un proceso que escucha por pipes[0] (extremo de lectura). 
+Si uno de los procesos escritores hace close(pipes[1]), pero el otro no, entonces el proceso que escucha no va a terminar nunca porque nunca le llega el EOF al read(). Recordar que el read() termina si le llega EOF. 
 
 ```
 
