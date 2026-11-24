@@ -46,11 +46,15 @@ Interrupciones: IRQ_TOUCH, tenemos que rehandlearla con un handler propio que co
     - PRINT_COLOR: le envíamos el color a utilizar (AZUL|ROJO|VERDE)
     - PRINT_OK: le escribimos el valor PRINT para que se efectúe el cambio
     De acá lo que manda el usuario es solamente el color según la acción que sucedió.
-- Read: acá hay algo interesante, sabemos que cuando empieza el gesto nos llega `IRQ_TOUCH`. 
+- Read: es lo más complicado de este ejercicio, hay que definir ciertas ambiguedades. 
 
 ¿Qué haría el programa de usuario en b)? 
 Hacer READ del driver, y en base a la respuesta que nos da, ejecutar el WRITE según los patrones de gestos con sus reglas de dominio.
 Notar que entonces, el READ debería dar la información necesaria para que el programa usuario sepa exactamente qué gesto fue realizado.
+
+**Responsabilidad del programa cliente**
+A medida que obtiene la información del READ, tiene que verificar las condiciones que definió de su dominio y enviar la información correspondiente al color en el WRITE. 
+Queda definir acá: ¿a quién le das la responsabilidad de avisar si fue un click, deslizamiento o pulsación prolongada? Para mí la responsabilidad debería estar en el Driver. El usuario no debería decidir por su gusto qué tipo de gesto fue. 
 
 **Ambigüedad del enunciado**
 El READ debe ser bloqueante. Esto significa que, si no hay información disponible, el proceso usuario debe quedar esperando.
